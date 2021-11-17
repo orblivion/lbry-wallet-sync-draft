@@ -400,3 +400,7 @@ Device 2 gets w1 from the server. It has the same sequence (`s`) as its current 
  * D2 - getWallet - can't decrypt. retrying in a few...
  * D1 - updatePassword - new downloadKey
  * D2 - getWallet - success
+
+## Switch Servers
+
+## Two Servers
