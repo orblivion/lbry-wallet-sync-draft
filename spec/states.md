@@ -1,6 +1,8 @@
 # Server Operations
 
--- TODO - Add transition rules. What happens given different sequence numbers, comparison baselines, etc. How these rules play out go in "Example Flows"
+The server is not to be trusted by the clients. Synchronization issuses will be the responsibility of the clients alone. If the server aids in synchronization process (paying attention to sequence number, etc), it should only be considered an optimization by the clients, not relied on as a source of truth.
+
+Questions of baseline versions for merging will be the responsibility of the clients. We can't trust the server to tell us what the baseline versions are.
 
     register
 
@@ -25,6 +27,11 @@
     putWallet
 
       Store new wallet data
+
+      NOTE: Consider if making putWallet a locking call could optimize sync
+
+      NOTE: We may need to save versons per-device to facilitate syncing
+      NOTE: If so, likely we want putWallet to fail if the saved wallet is of earlier version *per-device*
 
       params: authToken, version, encryptedWallet, sequence
       response: ok
@@ -177,7 +184,7 @@ These are functions that generate messages that are sent over rpcs.
 
       TODO - putDownloadKey
 
-# Example Flows
+# Flows
 
 ## Initial Setup
 
@@ -210,6 +217,48 @@ These are functions that generate messages that are sent over rpcs.
     device = Device(wallet, sequence=0, timestamp, sourceDeviceId, password, authToken)
     authserver = AuthServer(password, authToken, loginPublicKey)
     server = Server(wallet, sequence=0, timestamp, sourceDeviceId, password, authToken, loginPublicKey)
+
+## Set Up Additional Device - Successful:
+
+(note: this may end up being identical to account recovery)
+
+TODO - flow
+
+## Set Up Additional Device - Outdated Wallet:
+
+Installed, but outdated.
+
+TODO - flow
+
+## Set Up Additional Device - Unauthenticated Wallet:
+
+*Bookmark*. Complicated Edge Case.
+
+## Set Up Additional Device - Corrupted Wallet:
+
+*Bookmark*. Complicated Edge Case.
+
+Wallet created by a bad but not compromised client
+
+## Account Recovery - Successful:
+
+TODO - flow
+
+## Account Recovery - Outdated Wallet:
+
+TODO - flow
+
+Installed, but outdated.
+
+## Account Recovery - Unauthenticated Wallet:
+
+*Bookmark*. Complicated Edge Case.
+
+## Account Recovery - Corrupted Wallet:
+
+*Bookmark*. Complicated Edge Case.
+
+Wallet created by a bad but not compromised client
 
 ## Get Wallet - No Changes
 
@@ -257,6 +306,121 @@ These are functions that generate messages that are sent over rpcs.
     device = Device(wallet=w1, sequence=s,     timestamp=t0,     sourceDeviceId, password, authToken)
     server = Server(wallet=w2, sequence=s - 1, timestamp=t0 - t, sourceDeviceId, password, authToken, loginPublicKey)
 
+## Get Wallet - Unauthenticated Wallet
+
+*Bookmark*. Complicated Edge Case.
+
+## Get Wallet - Corrupted Wallet
+
+*Bookmark*. Complicated Edge Case.
+
+Wallet created by a bad but not compromised client
+
+## Sync - Conflict
+
+TODO - Actually, we need to figure out how different clients handle versions before we worry about how the server will behave or even what it needs to be storing. See [the sync document](sync.md) for that. This section as currently written may not be very useful in the end.
+
+### Summary
+
+* Server sequence=s-1
+* Client 1 made change, sequence=s
+* Client 2 made change, sequence=s
+* Client 1 pushes change sequence=s
+* Client 2 pushes change sequence=s - fail because s=s
+* Client 2 pulls sequence=s
+* Client 2 resolves change to sequence=s+1
+* Client 2 pushes back sequence=s+1
+* Client 1 pulls sequence=s+1
+
+### Detail
+
+*State: Devices in Conflict*
+
+-- TODO - device and server is a M2M relationship. Each should have a list of authTokens rather than just one
+
+    device1 = Device(wallet=w1, sequence=s,     timestamp=t0 + t1, sourceDeviceId=d1, password, authToken)
+    device2 = Device(wallet=w2, sequence=s,     timestamp=t0 + t2, sourceDeviceId=d2, password, authToken)
+    server =  Server(wallet=w3, sequence=s - 1, timestamp=t0,      sourceDeviceId,    password, authToken, loginPublicKey)
+
+*Transition: device1.rpc(putWallet(wallet=w1, sequence=s, timestamp=t0 + t1, sourceDeviceId=d1, password, authToken))*
+
+*State: Server and One Device in Conflict*
+
+    device1 = Device(wallet=w1, sequence=s, timestamp=t0 + t1, sourceDeviceId=d1, password, authToken)
+    device2 = Device(wallet=w2, sequence=s, timestamp=t0 + t2, sourceDeviceId=d2, password, authToken)
+    server =  Server(wallet=w1, sequence=s, timestamp=t0 + t1, sourceDeviceId=d1, password, authToken, loginPublicKey)
+
+*Transition: device2.rpc(putWallet(wallet=w2, sequence=s, timestamp=t0 + t2, sourceDeviceId=d2, password, authToken))*
+
+Failure: Server rejects: already has sequence=s
+
+*State: Server and One Device in Conflict*
+
+    device1 = Device(wallet=w1, sequence=s, timestamp=t0 + t1, sourceDeviceId=d1, password, authToken)
+    device2 = Device(wallet=w2, sequence=s, timestamp=t0 + t2, sourceDeviceId=d2, password, authToken)
+    server =  Server(wallet=w1, sequence=s, timestamp=t0 + t1, sourceDeviceId=d1, password, authToken, loginPublicKey)
+
+*Transition: device2.rpc(getWallet())*
+
+Device 2 gets w1 from the server. It has the same sequence (`s`) as its current wallet w2, so we do conflict resolution.
+
+*State: Server Wallet and One Device Wallet Out of Date*
+
+-- TODO - need to add baseline wallet/sequence to the state for comparison for conflict revolution. this isn't a trivial task.
+
+    w4 = conflict_resolution(w1, w2)
+    device1 = Device(wallet=w1, sequence=s,     timestamp=t0 + t1, sourceDeviceId=d1, password, authToken)
+    device2 = Device(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=d2, password, authToken)
+    server =  Server(wallet=w1, sequence=s,     timestamp=t0 + t1, sourceDeviceId=d1, password, authToken, loginPublicKey)
+
+*Transition: device1.rpc(putWallet(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=2, password, authToken))*
+
+*State: Device Wallet Out of Date*
+
+    w4 = conflict_resolution(w1, w2)
+    device1 = Device(wallet=w1, sequence=s,     timestamp=t0 + t1, sourceDeviceId=d1, password, authToken)
+    device2 = Device(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=d2, password, authToken)
+    server =  Server(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=d2, password, authToken, loginPublicKey)
+
+*Transition: device2.rpc(getWallet())*
+
+*State: In Sync*
+
+(Note that device1 has sourceDeviceId=d2 because that's the source of that walletState)
+
+    w4 = conflict_resolution(w1, w2)
+    device1 = Device(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=d2, password, authToken)
+    device2 = Device(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=d2, password, authToken)
+    server =  Server(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=d2, password, authToken, loginPublicKey)
+
+## Sync - Corrupted Sequence
+
+*Bookmark*. Complicated Edge Case.
+
+Sequence created by a bad but not compromised client.
+
+Sets sequence to +1000: How does this play out with the client who is getting this wallet? Probably fine, this client just accepts the new sequence and does a sync as usual.
+
+Sets sequence to -1000: How does this play out with the client who is getting this wallet?
+
+What if sequence is close to int(max)? Maybe there should be some sort of failsafe that doesn't accept such sequence values. But what to do in such a case?
+
+## Sync - Unauthenticated Wallet
+
+*Bookmark*. Complicated Edge Case.
+
+## Sync - Corrupted Wallet
+
+Wallet created by a bad but not compromised client
+
+*Bookmark*. Complicated Edge Case.
+
+## Change Password - Evil Server
+
+What if the server refuses to acknowledge your password change in the downloadKey and/or the wallet? Would this be worse than having no server at all?
+
+*Bookmark*. Complicated Edge Case.
+
 ## Put Wallet - No Change
 
 *State: In Sync*
@@ -303,60 +467,7 @@ These are functions that generate messages that are sent over rpcs.
     device = Device(wallet=w1, sequence=s,     timestamp=t0,     sourceDeviceId, password, authToken)
     server = Server(wallet=w2, sequence=s - 1, timestamp=t0 - t, sourceDeviceId, password, authToken, loginPublicKey)
 
-## Sync Conflict
-
-*State: Devices in Conflict*
-
-(Each device has made one change without syncing yet)
-
--- TODO - device and server is a M2M relationship. Each should have a list of authTokens rather than just one
-
-    device1 = Device(wallet=w1, sequence=s,     timestamp=t0 + t1, sourceDeviceId=d1, password, authToken)
-    device2 = Device(wallet=w2, sequence=s,     timestamp=t0 + t2, sourceDeviceId=d2, password, authToken)
-    server =  Server(wallet=w3, sequence=s - 1, timestamp=t0,      sourceDeviceId,    password, authToken, loginPublicKey)
-
-*Transition: device1.rpc(putWallet(wallet=w1, sequence=s, timestamp=t0 + t1, sourceDeviceId, password, authToken))*
-
-*State: Server and One Device in Conflict*
-
-    device1 = Device(wallet=w1, sequence=s, timestamp=t0 + t1, sourceDeviceId=d1, password, authToken)
-    device2 = Device(wallet=w2, sequence=s, timestamp=t0 + t2, sourceDeviceId=d2, password, authToken)
-    server =  Server(wallet=w1, sequence=s, timestamp=t0 + t1, sourceDeviceId=d1, password, authToken, loginPublicKey)
-
-*Transition: device2.rpc(getWallet())*
-
-Device 2 gets w1 from the server. It has the same sequence (`s`) as its current wallet w2, so we do conflict resolution.
-
-*State: Server Wallet and One Device Wallet Out of Date*
-
--- TODO - need to add baseline wallet/sequence to the state for comparison for conflict revolution. this isn't a trivial task.
-
-    w4 = conflict_resolution(w1, w2)
-    device1 = Device(wallet=w1, sequence=s,     timestamp=t0 + t1, sourceDeviceId=d1, password, authToken)
-    device2 = Device(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=d2, password, authToken)
-    server =  Server(wallet=w1, sequence=s,     timestamp=t0 + t1, sourceDeviceId=d1, password, authToken, loginPublicKey)
-
-*Transition: device1.rpc(putWallet(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=2, password, authToken))*
-
-*State: Device Wallet Out of Date*
-
-    w4 = conflict_resolution(w1, w2)
-    device1 = Device(wallet=w1, sequence=s,     timestamp=t0 + t1, sourceDeviceId=d1, password, authToken)
-    device2 = Device(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=d2, password, authToken)
-    server =  Server(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=d2, password, authToken, loginPublicKey)
-
-*Transition: device2.rpc(getWallet())*
-
-*State: In Sync*
-
-(Note that device1 has sourceDeviceId=d2 because that's the source of that walletState)
-
-    w4 = conflict_resolution(w1, w2)
-    device1 = Device(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=d2, password, authToken)
-    device2 = Device(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=d2, password, authToken)
-    server =  Server(wallet=w4, sequence=s + 1, timestamp=t0 + t3, sourceDeviceId=d2, password, authToken, loginPublicKey)
-
-## Change Password
+## Change Password - Basic
 
 *State: In Sync*
 
@@ -388,7 +499,7 @@ Device 2 gets w1 from the server. It has the same sequence (`s`) as its current 
     server =     Server(wallet, sequence, timestamp, sourceDeviceId, password=p2, authToken, loginPublicKey)
     authserver = AuthServer(password=p2, authToken, loginPublicKey)
 
-## Change Password - Complicated
+## Change Password - While Registering New Device
 
 -- TODO a complicated scenario wherein a new device is confused by another device in the middle of updating its password:
 
@@ -401,6 +512,16 @@ Device 2 gets w1 from the server. It has the same sequence (`s`) as its current 
  * D1 - updatePassword - new downloadKey
  * D2 - getWallet - success
 
+## Change Password - Evil Server
+
+What if the server refuses to acknowledge your password change in the downloadKey and/or the wallet? Would this be worse than having no server at all?
+
+*Bookmark*. Complicated Edge Case.
+
 ## Switch Servers
 
+TODO - flow
+
 ## Two Servers
+
+TODO - flow
