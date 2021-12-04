@@ -36,7 +36,7 @@ Server refuses new wallet if:
 
 Devices make changes and send them to the server, incrementing sync number each time. The other device receives every version.
 
-![](diagrams/diagram-1.svg)
+![](sync-diagrams/diagram-1.svg)
 
 <details><summary>source</summary>
 
@@ -60,7 +60,7 @@ Devices make changes and send them to the server, incrementing sync number each 
 
 </details>
 
-![](diagrams/diagram-2.svg)
+![](sync-diagrams/diagram-2.svg)
 
 <details><summary>source</summary>
 
@@ -84,7 +84,7 @@ Devices make changes and send them to the server, incrementing sync number each 
 
 Devices make changes and send them to the server, incrementing sync number each time. The other device doesn't receive every version (perhaps due to network issues). Devices have no way of knowing whether every other device in the system has received their updates (until those clients make their own changes and sends them to the server).
 
-![](diagrams/diagram-3.svg)
+![](sync-diagrams/diagram-3.svg)
 
 <details><summary>source</summary>
 
@@ -107,7 +107,7 @@ Devices make changes and send them to the server, incrementing sync number each 
 
 </details>
 
-![](diagrams/diagram-4.svg)
+![](sync-diagrams/diagram-4.svg)
 
 <details><summary>source</summary>
 
@@ -127,7 +127,7 @@ Devices make changes and send them to the server, incrementing sync number each 
 
 Both devices make changes. Device A is able to send its changes to the server. Device B is blocked when it tries to send because Device A got there first. Device B first has to pull in Device A's changes from the server, merge the changes together, and send the result back.
 
-![](diagrams/diagram-5.svg)
+![](sync-diagrams/diagram-5.svg)
 
 <details><summary>source</summary>
 
@@ -156,7 +156,7 @@ Both devices make changes. Device A is able to send its changes to the server. D
 
 </details>
 
-![](diagrams/diagram-6.svg)
+![](sync-diagrams/diagram-6.svg)
 
 <details><summary>source</summary>
 
@@ -190,7 +190,7 @@ This has to do with merging in multiple times before pushing back. For simplicit
 NOTE: An advancement we could make would be to have intermittent merge bases. We may need to alo store the original merge base of sequence 5 (see below).
 
 
-![](diagrams/diagram-7.svg)
+![](sync-diagrams/diagram-7.svg)
 
 <details><summary>source</summary>
 
@@ -225,7 +225,7 @@ NOTE: An advancement we could make would be to have intermittent merge bases. We
 
 </details>
 
-![](diagrams/diagram-8.svg)
+![](sync-diagrams/diagram-8.svg)
 
 <details><summary>source</summary>
 
@@ -262,7 +262,7 @@ TODO - server edits sequence number. Device stops it by checking signature.
 
 What if the server were dishonest - presenting older versions of the walletState to devices? The wallet will discover it right away and enter Error Recovery Mode.
 
-![](diagrams/diagram-9.svg)
+![](sync-diagrams/diagram-9.svg)
 
 <details><summary>source</summary>
 
@@ -292,7 +292,7 @@ Let's say the dishonest (or maybe buggy) server is split into states: ServerX an
 
 The servers will start the with the same state, and both devices are up to date. The current walletState has a sequence of 5 and was pushed by Device B. (sequence 4 was previously pushed by Device A).
 
-![](diagrams/diagram-10.svg)
+![](sync-diagrams/diagram-10.svg)
 
 <details><summary>source</summary>
 
@@ -313,7 +313,7 @@ The servers will start the with the same state, and both devices are up to date.
 
 Next, both devices make local changes and push their walletState with Sequence 6. An honest server would reject at least one of them. In this case, the server dishonestly creates an alternate timeline for each, as ServerX and ServerY. For convenience, we will refer to these sequences as Sequence 6.A and Sequence 6.B, but of course the sequence value for both will simply be 6:
 
-![](diagrams/diagram-11.svg)
+![](sync-diagrams/diagram-11.svg)
 
 <details><summary>source</summary>
 
@@ -343,7 +343,7 @@ Next, both devices make local changes and push their walletState with Sequence 6
 
 Now the server attempts to cause trouble by connecting Device B to ServerX. Device B pulls, and sees Sequence 6.A:
 
-![](diagrams/diagram-12.svg)
+![](sync-diagrams/diagram-12.svg)
 
 <details><summary>source</summary>
 
@@ -367,7 +367,7 @@ Device B can see that the walletState's sequence number didn't change, and yet t
 
 But what if the dishonest server was a little smarter. Instead of giving Device B access to Sequence 6.A, it waits until Device A makes one more change and pushes Sequence 7. Again, Device A doesn't know about Sequence 6.B, so it still believes that Device B's merge base is 5:
 
-![](diagrams/diagram-13.svg)
+![](sync-diagrams/diagram-13.svg)
 
 <details><summary>source</summary>
 
@@ -388,7 +388,7 @@ But what if the dishonest server was a little smarter. Instead of giving Device 
 
 Now once again the server attempts to cause trouble by connecting Device B to ServerX, attempting to trick Device B into accepting Sequence 7:
 
-![](diagrams/diagram-14.svg)
+![](sync-diagrams/diagram-14.svg)
 
 <details><summary>source</summary>
 
@@ -413,7 +413,7 @@ With an honest server, if Device B successfully pushed Sequence 6.B, Sequence 7 
 
 Logically speaking, Sequence 5 is the proper merge base between Sequence 7 and Sequence 6.B:
 
-![](diagrams/diagram-15.svg)
+![](sync-diagrams/diagram-15.svg)
 
 <details><summary>source</summary>
 
@@ -438,7 +438,7 @@ Logically speaking, Sequence 5 is the proper merge base between Sequence 7 and S
 
 However, Device B considers Sequence 6B to be the merge base. This means that if Device B were to accept Sequence 7, it would effectively _revert_ Change c-2:
 
-![](diagrams/diagram-16.svg)
+![](sync-diagrams/diagram-16.svg)
 
 <details><summary>source</summary>
 
