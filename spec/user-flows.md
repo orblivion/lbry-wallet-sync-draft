@@ -181,6 +181,10 @@ VisualHash : GoBack()
 
 # Change Password
 
+To simplify the flow, we don't allow the user to initiate a password change on their device while that device has unmerged changes to their wallet. This way, if another device pushes a change, it can be trivially merged before applying the password change and pushing it back to the server.
+
+However, if another device pushes a different password change (B), we have to cancel the password change (A) on this device. This is because we need the user to input password B first. We need password B to know if there are any changes to the wallet in addition to the password. During the process we invite the user to change the password to A again after if they want, but we leave it to them.
+
 ![](user-flows-diagrams/diagram-5.svg)
 
 <details><summary>source</summary>
@@ -188,8 +192,10 @@ VisualHash : GoBack()
 ```mermaid
 classDiagram
 
-LoggedInHomeScreen --|> ChangePassword : Change Password
+LoggedInHomeScreen --|> ChangePassword : Change Password - *only if no un-merged changes present*
 ChangePassword --|> BadPassword : Submit - Bad Password
+ChangePassword --|> ChangePasswordPreempted : Submit - Another device updated the password
+ChangePasswordPreempted --|> ConfirmPassword : Resolve Changes
 ChangePassword --|> LoggedInHomeScreen : Submit - Success
 BadPassword --|> ChangePassword : Try Again
 
@@ -210,6 +216,11 @@ ChangePassword : Submit()
 
 BadPassword : Password Not Good Enough
 BadPassword : Try Again()
+
+ChangePasswordPreempted : Looks like you changed your password on another device.
+ChangePasswordPreempted : You need to enter this new password on this device to continue.
+ChangePasswordPreempted : If you still would like to change your password using this device, do so afterwards.
+ChangePasswordPreempted : Resolve Changes()
 
 ConfirmPassword : Enter Credentials
 ConfirmPassword : * [Password]
