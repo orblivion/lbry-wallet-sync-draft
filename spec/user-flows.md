@@ -181,9 +181,21 @@ VisualHash : GoBack()
 
 # Change Password
 
-To simplify the flow, we don't allow the user to initiate a password change on their device while that device has unmerged changes to their wallet. This way, if another device pushes a change, it can be trivially merged before applying the password change and pushing it back to the server.
+## If you are *initiating* a password change on a given device:
 
-However, if another device pushes a different password change (B), we have to cancel the password change (A) on this device. This is because we need the user to input password B first. We need password B to know if there are any changes to the wallet in addition to the password. During the process we invite the user to change the password to A again after if they want, but we leave it to them.
+To simplify the flow, we don't allow the user to initiate a password change (A) on their device while that device has unmerged changes to their wallet. This way, if another device pushes a change (with the previous password), it can be trivially merged before applying the password change and pushing it back to the server.
+
+However, if another device pushes a different password change (B), we have to cancel the password change (A) on this device. This is because we need the user to input password (B) first to decrypt the latest wallet. We can't just overwrite it with password (A) because the latest wallet may also have changes that we need to merge in. Though we interrupt the password change (A), we invite the user to change the password to (A) again later if they want, but we leave it to them.
+
+## If you are *confirming* a password change created on another device:
+
+Supposing the password is changed from (P) to (A) on another device, and the user gets a **password confirmation prompt** on this device.
+
+If another device changes the password _again_ to (B) in the middle of the **password confirmation prompt**, we should be able to hide the complications from the user. The user probably expects password (B) to work, so that's what we will expect. This means that we will pull the wallet again _after_ the user enters their password to confirm that it decrypts.
+
+If a third device also creates a change to the wallet it will have the password (B), assuming other clients are working correctly. This is because no clients will push until they've updated their own password to what's on the server. It won't have passwords (P) or (A). The only exception is if this third device also _initiates_ a new password change. In all, every wallet on the server should be assumed to be encrypted by the most recent password change initiation that is accepted by the server.
+
+If there is a wallet change along with the password change, it can be merged in cleanly if there are no local changes. If there are local changes, they can be resolved with MergeChanges after password (B) is confirmed. If another device changes the password _again_ during the MergeChanges screen, the merge will fail simply because the wallet on the server is updated. The new wallet will be pulled, the device will see that the password doesn't match (B), and it will bring up the **password confirmation prompt** again. At this point it can safely discard password (B), because we no longer need the wallet encrypted by password (B). We have yet to make and push a successful merge, so our local baseline is still the wallet encrypted with password (P). All of the changes that we have yet to merge are in the wallet with password (C).
 
 ![](user-flows-diagrams/diagram-5.svg)
 
@@ -195,14 +207,21 @@ classDiagram
 LoggedInHomeScreen --|> ChangePassword : Change Password - *only if no un-merged changes present*
 ChangePassword --|> BadPassword : Submit - Bad Password
 ChangePassword --|> ChangePasswordPreempted : Submit - Another device updated the password
-ChangePasswordPreempted --|> ConfirmPassword : Resolve Changes
+ChangePasswordPreempted --|> ConfirmPassword : Accept New Password Instead
 ChangePassword --|> LoggedInHomeScreen : Submit - Success
 BadPassword --|> ChangePassword : Try Again
 
 LoggedInHomeScreen --|> ConfirmPassword : Other device changes password
+ConfirmPassword --|> ConfirmPassword : Other device changes password during ConfirmPassword
 ConfirmPassword --|> IncorrectPassword : Submit - Incorrect
 ConfirmPassword --|> LoggedInHomeScreen : Submit - Success
+ConfirmPassword --|> MergeChanges : Submit - Success, but we've now decrypted changes that we need to merge
 IncorrectPassword --|> ConfirmPassword : Try Again
+
+MergeChanges --|> ConfirmPassword : Commit Merge - Other device changes password during MergeChanges
+MergeChanges --|> LoggedInHomeScreen : Commit Merge - Merge committed to server
+
+MergeChanges : ...
 
 LoggedInHomeScreen : Trending Videos
 LoggedInHomeScreen : Make Changes()
@@ -220,7 +239,7 @@ BadPassword : Try Again()
 ChangePasswordPreempted : Looks like you changed your password on another device.
 ChangePasswordPreempted : You need to enter this new password on this device to continue.
 ChangePasswordPreempted : If you still would like to change your password using this device, do so afterwards.
-ChangePasswordPreempted : Resolve Changes()
+ChangePasswordPreempted : Accept New Password Instead()
 
 ConfirmPassword : Enter Credentials
 ConfirmPassword : * [Password]
