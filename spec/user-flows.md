@@ -176,7 +176,6 @@ VisualHash : - visual hash -
 VisualHash : GoBack()
 
 ```
-
 </details>
 
 # Change Password
@@ -257,10 +256,48 @@ IncorrectPassword : Try Again()
 
 </details>
 
+# Turn On Application and Log In
+
+There is an edge case when starting the app. If _both_ of the following are true:
+
+* A password change is waiting on the server
+* There are local _unmerged_ changes on the device
+
+then the user will need to enter both their old and new passwords on startup. The old password will decrypt the local wallet, and the new password decrypt the wallet on the server.
+
+![](user-flows-diagrams/diagram-6.svg)
+
+<details><summary>source</summary>
+
+```mermaid
+classDiagram
+
+DeviceOff --|> AppStartLogin : Start App - Normal
+AppStartLogin --|> LoggedInHomeScreen : Log In - No password change on server
+AppStartLogin --|> LoggedInHomeScreen : Log In - New Password - Password change exists on server. No local wallet changes
+
+AppStartLogin --|> GetLocalPassword : Log In - New Password - Password change exists on server, local wallet changes exist
+AppStartLogin --|> GetServerPassword : Log In - Old Password - Password change exists on server
+
+GetLocalPassword --|> LoggedInHomeScreen : Log In - Old Password
+GetServerPassword --|> LoggedInHomeScreen : Log In - New Password
+
+DeviceOff : Start App()
+AppStartLogin : Log In()
+LoggedInHomeScreen : ...
+GetLocalPassword : Looks like you have some changes that you haven't pushed.
+GetLocalPassword : Enter your old password to unlock your wallet so it can be pushed.
+GetLocalPassword : Log In()
+GetServerPassword : Looks like you changed your password from another device.
+GetServerPassword : Enter your new password.
+GetServerPassword : Log In()
+```
+
+</details>
 
 # Change Server
 
-![](user-flows-diagrams/diagram-6.svg)
+![](user-flows-diagrams/diagram-7.svg)
 
 <details><summary>source</summary>
 
