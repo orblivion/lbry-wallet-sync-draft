@@ -181,6 +181,11 @@ VisualHash : GoBack()
 
 # Change Password
 
+Password changes will happen in the same line as other changes to the walletState:
+
+* A password change (with no other changes) will add a new walletState with a new sequence.
+* It will be necessary to pull the latest walletState before pushing a password change.
+
 ## If you are *initiating* a password change on a given device:
 
 To simplify the flow, we don't allow the user to initiate a password change (A) on their device while that device has unmerged changes to their wallet. This way, if another device pushes a change (with the previous password), it can be trivially merged before applying the password change and pushing it back to the server.
