@@ -9,20 +9,20 @@ classDiagram
 
 LoggedOutHomeScreen --|> Signup : Set Up Account
 Signup --|> LoggedInHomeScreen : Sign Up - Success
-Signup --|> Login : I already have an account
+Signup --|> SetupLogin : I already have an account
 
 Signup --|> SignupErrorCredentials : Sign Up - Bad Credentials
 SignupErrorCredentials --|> Signup : Try Again
 
 Signup --|> SignupErrorEmailExists : Sign Up - Email Exists On Server
 SignupErrorEmailExists --|> Signup : Sign up with a different email address
-SignupErrorEmailExists --|> Login : Log In Instead
+SignupErrorEmailExists --|> SetupLogin : Log In Instead
 
 Signup --|> SignupErrorPubKeyExists : Sign Up - Wallet PubKey Exists On Server with different Email
-SignupErrorPubKeyExists --|> Login : Log In Instead
+SignupErrorPubKeyExists --|> SetupLogin : Log In Instead
 
 Signup --|> SignupErrorPubKeyEmailExists : Sign Up - Wallet PubKey Email Pair Exists On Server
-SignupErrorPubKeyEmailExists --|> Login : Log In Instead
+SignupErrorPubKeyEmailExists --|> SetupLogin : Log In Instead
 
 LoggedOutHomeScreen : Trending Videos
 LoggedOutHomeScreen : Set Up Account()
@@ -59,12 +59,12 @@ SignupErrorEmailExists : This email already exists on this server
 SignupErrorEmailExists : Log In Instead()
 SignupErrorEmailExists : Sign up with a different email address()
 
-Login : ...
+SetupLogin : ...
 ```
 
 </details>
 
-# Account Recovery / Login
+# Account Recovery
 
 ![](user-flows-diagrams/diagram-2.svg)
 
@@ -73,9 +73,9 @@ Login : ...
 ```mermaid
 classDiagram
 
-Login --|> MergeLoggedInLoggedOut : Log In - Existing pre-login local changes
-Login --|> DataError : Log In - Data Error
-Login --|> LoggedInHomeScreen : Log In - No existing pre-login local changes
+SetupLogin --|> MergeLoggedInLoggedOut : Log In - Existing pre-login local changes
+SetupLogin --|> DataError : Log In - Data Error
+SetupLogin --|> LoggedInHomeScreen : Log In - No existing pre-login local changes
 
 MergeLoggedInLoggedOut --|> LoggedInHomeScreen : Discard logged out changes
 MergeLoggedInLoggedOut --|> LoggedInHomeScreen : Merge logged out changes
@@ -99,18 +99,18 @@ DataError : - This might be Error Recovery Mode, or Error Recovery Mode may be s
 DataError : - this is a complicated part -
 DataError : ????()
 
-Login : Enter Credentials
-Login : * [Server]
-Login : * [Email]
-Login : * [Password]
-Login : Log In()
+SetupLogin : Enter Credentials
+SetupLogin : * [Server]
+SetupLogin : * [Email]
+SetupLogin : * [Password]
+SetupLogin : Log In()
 ```
 
 </details>
 
 # Set Up Additional Device
 
-The only difference between this and Recovery / Login is that there is another device connected somewhere. The one place this could change the flow is if that device pushes a change while this device is in the middle of MergeLoggedInLoggedOut.
+The only difference between this and Account Recovery is that there is another device connected somewhere. The one place this could change the flow is if that device pushes a change while this device is in the middle of MergeLoggedInLoggedOut.
 
 ![](user-flows-diagrams/diagram-3.svg)
 
@@ -119,8 +119,8 @@ The only difference between this and Recovery / Login is that there is another d
 ```mermaid
 classDiagram
 
-Login --|> MergeLoggedInLoggedOut : Existing pre-login local changes
-Login --|> LoggedInHomeScreen : No existing pre-login local changes
+SetupLogin --|> MergeLoggedInLoggedOut : Existing pre-login local changes
+SetupLogin --|> LoggedInHomeScreen : No existing pre-login local changes
 
 MergeLoggedInLoggedOut --|> LoggedInHomeScreen : Discard logged out changes
 MergeLoggedInLoggedOut --|> LoggedInHomeScreen : Merge logged out changes
@@ -133,7 +133,7 @@ LoggedOutHomeScreen : ...
 
 MergeLoggedInLoggedOut : ...
 
-Login : ...
+SetupLogin : ...
 
 ```
 
