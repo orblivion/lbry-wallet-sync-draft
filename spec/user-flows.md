@@ -12,9 +12,9 @@
 flowchart TD
 	classDef start fill:#8f8;
 	classDef finish fill:#f88;
+  LoggedOutHomeScreen:::start
   LoggedInHomeScreen:::finish
   Login:::finish
-  LoggedOutHomeScreen:::start
 
   LoggedOutHomeScreen --<big><b>Log In / Sign Up</b></big>--> Signup
   Signup --<big><b>Sign Up</b></big> - <i>Success</i>--> LoggedInHomeScreen
@@ -93,39 +93,53 @@ flowchart TD
 <details><summary>source</summary>
 
 ```mermaid
-classDiagram
+flowchart TD
+	classDef start fill:#8f8;
+	classDef finish fill:#f88;
+	classDef editorNote fill:#CCC;
+  Login:::start
+  LoggedInHomeScreen:::finish
+  LoggedOutHomeScreen:::finish
+  MergeLoggedInLoggedOut3:::editorNote
+  DataError3:::editorNote
 
-Login --|> MergeLoggedInLoggedOut : Log In - Existing pre-login local changes
-Login --|> DataError : Log In - Data Error
-Login --|> LoggedInHomeScreen : Log In - No existing pre-login local changes
+  Login --<big><b>Log In</b></big> - <i>Existing pre-login local changes</i>--> MergeLoggedInLoggedOut
+  Login --<big><b>Log In</b></big> - <i>Data Error<i>--> DataError
+  Login --<big><b>Log In</b></big> - <i>No existing pre-login local changes</i>--> LoggedInHomeScreen
 
-MergeLoggedInLoggedOut --|> LoggedInHomeScreen : Discard logged out changes
-MergeLoggedInLoggedOut --|> LoggedInHomeScreen : Merge logged out changes
-MergeLoggedInLoggedOut --|> LoggedOutHomeScreen : Cancel login
+  MergeLoggedInLoggedOut --<big><b>Discard logged out changes</b></big>--> LoggedInHomeScreen
+  MergeLoggedInLoggedOut --<big><b>Merge logged out changes</b></big>--> LoggedInHomeScreen
+  MergeLoggedInLoggedOut --<big><b>Cancel login</b></big>--> LoggedOutHomeScreen
 
-LoggedInHomeScreen : ...
-LoggedOutHomeScreen : ...
+  subgraph LoggedInHomeScreen
+    direction RL
+		LoggedInHomeScreen1[...]
+  end
 
-MergeLoggedInLoggedOut : Before you logged in, you took some actions that were saved to your wallet. Would you like to merge them?
-MergeLoggedInLoggedOut : - this is a complicated part -
-MergeLoggedInLoggedOut : - this is unlike normal conflict resolution because the baseline is zero, and also the logged out wallet's keypair is discarded -
-MergeLoggedInLoggedOut : Discard logged out changes()
-MergeLoggedInLoggedOut : Merge logged out changes()
-MergeLoggedInLoggedOut : Don't log in for now()
+  subgraph LoggedOutHomeScreen
+    direction RL
+		LoggedOutHomeScreen1[...]
+  end
 
-DataError : Possible Errors
-DataError : * Corrupt wallet JSON
-DataError : * Signature does not match
-DataError : * Sequence error
-DataError : - This might be Error Recovery Mode, or Error Recovery Mode may be split off from here -
-DataError : - this is a complicated part -
-DataError : ????()
+  subgraph MergeLoggedInLoggedOut
+    direction RL
+    MergeLoggedInLoggedOut1[<h3>Prompt</h3>Before you logged in, you took some actions that were saved to your wallet. Would you like to merge them?]
+    MergeLoggedInLoggedOut2[<h3>Buttons</h3><ul><li>Discard logged out changes</li><li>Merge logged out changes</li><li>Don't log in for now</li></ul>]
+    MergeLoggedInLoggedOut3[<i>this is a complicated part<br>this is unlike normal conflict resolution because the baseline is zero, and also the logged out wallet's keypair is discarded</i>]
+  end
 
-Login : Enter Credentials
-Login : * [Server]
-Login : * [Email]
-Login : * [Password]
-Login : Log In()
+  subgraph DataError
+    direction RL
+    DataError1[<h3>Error</h3><i>One of the following</i><ul><li>Corrupt wallet JSON</li><li>Signature does not match</li><li>Sequence error</li></ul>]
+    DataError2[<h3>Buttons</h3><ul><li>??? <i>TODO</i></li></ul>]
+    DataError3[<i>this is a complicated part<br>This might be Error Recovery Mode, or Error Recovery Mode may be split off from here</i>]
+  end
+
+  subgraph Login
+    direction RL
+    Login1[<h3>Enter Credentials</h3><ul><li>Server</li><li>Email</li><li>Password</li></ul>]
+    Login2[<h3>Buttons</h3><ul><li>Log In</li></ul>]
+  end
 ```
 
 </details>
@@ -160,6 +174,23 @@ Login : ...
 ```
 
 </details>
+
+# Recover with existing wallet file
+
+<!--
+
+TODO - What if you have a wallet, copy it manually to a few devices, and then try to start the syncing? Make sure that it enters manual recovery mode, because we can't be sure that it's in sync without the metadata trail.
+
+Though on the real - what we figure out whether to sync or not, or whatever, is:
+
+* The unsynced change
+* The walletstate before the new changes
+* The walletstate on the server now (can pull to see)
+* That's all. That's your merge.
+
+The metadata is only to make sure that the server isn't lying about how much of the client's previous changes it has incorporated.
+
+-->
 
 # Make Logged In changes to wallet
 
