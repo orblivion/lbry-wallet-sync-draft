@@ -13,25 +13,25 @@ flowchart TD
 	classDef start fill:#8f8;
 	classDef finish fill:#f88;
   LoggedInHomeScreen:::finish
-  SetupLogin:::finish
+  Login:::finish
   LoggedOutHomeScreen:::start
 
   LoggedOutHomeScreen --<big><b>Log In / Sign Up</b></big>--> Signup
   Signup --<big><b>Sign Up</b></big> - <i>Success</i>--> LoggedInHomeScreen
-  Signup --<big><b>I already have an account</b></big>--> SetupLogin
+  Signup --<big><b>I already have an account</b></big>--> Login
 
   Signup --<big><b>Sign Up</b></big> - <i>Bad Credentials</i>--> SignupErrorCredentials
   SignupErrorCredentials --<big><b>Try Again</b></big>--> Signup
 
   Signup --<big><b>Sign Up</b></big> - <i>Email Exists On Server</i>--> SignupErrorEmailExists
   SignupErrorEmailExists --<big><b>Sign up with a different email address</b></big>--> Signup
-  SignupErrorEmailExists --<big><b>Log In Instead</b></big>--> SetupLogin
+  SignupErrorEmailExists --<big><b>Log In Instead</b></big>--> Login
 
   Signup --<big><b>Sign Up</b></big> - <i>Wallet PubKey Exists On Server with different Email</i>--> SignupErrorPubKeyExists
-  SignupErrorPubKeyExists --<big><b>Log In Instead</b></big>--> SetupLogin
+  SignupErrorPubKeyExists --<big><b>Log In Instead</b></big>--> Login
 
   Signup --<big><b>Sign Up</b></big> - <i>Wallet PubKey Email Pair Exists On Server</i>--> SignupErrorPubKeyEmailExists
-  SignupErrorPubKeyEmailExists --<big><b>Log In Instead</b></big>--> SetupLogin
+  SignupErrorPubKeyEmailExists --<big><b>Log In Instead</b></big>--> Login
 
   subgraph LoggedOutHomeScreen
 		direction RL
@@ -43,8 +43,8 @@ flowchart TD
 		LoggedInHomeScreen1[<h3>Logged In Home Screen</h3>]
   end
 
-  subgraph SetupLogin
-		SetupLogin1[<h3>Log In</h3>]
+  subgraph Login
+		Login1[<h3>Log In</h3>]
   end
 
   subgraph SignupErrorPubKeyEmailExists
@@ -95,9 +95,9 @@ flowchart TD
 ```mermaid
 classDiagram
 
-SetupLogin --|> MergeLoggedInLoggedOut : Log In - Existing pre-login local changes
-SetupLogin --|> DataError : Log In - Data Error
-SetupLogin --|> LoggedInHomeScreen : Log In - No existing pre-login local changes
+Login --|> MergeLoggedInLoggedOut : Log In - Existing pre-login local changes
+Login --|> DataError : Log In - Data Error
+Login --|> LoggedInHomeScreen : Log In - No existing pre-login local changes
 
 MergeLoggedInLoggedOut --|> LoggedInHomeScreen : Discard logged out changes
 MergeLoggedInLoggedOut --|> LoggedInHomeScreen : Merge logged out changes
@@ -121,11 +121,11 @@ DataError : - This might be Error Recovery Mode, or Error Recovery Mode may be s
 DataError : - this is a complicated part -
 DataError : ????()
 
-SetupLogin : Enter Credentials
-SetupLogin : * [Server]
-SetupLogin : * [Email]
-SetupLogin : * [Password]
-SetupLogin : Log In()
+Login : Enter Credentials
+Login : * [Server]
+Login : * [Email]
+Login : * [Password]
+Login : Log In()
 ```
 
 </details>
@@ -141,8 +141,8 @@ The only difference between this and Account Recovery is that there is another d
 ```mermaid
 classDiagram
 
-SetupLogin --|> MergeLoggedInLoggedOut : Existing pre-login local changes
-SetupLogin --|> LoggedInHomeScreen : No existing pre-login local changes
+Login --|> MergeLoggedInLoggedOut : Existing pre-login local changes
+Login --|> LoggedInHomeScreen : No existing pre-login local changes
 
 MergeLoggedInLoggedOut --|> LoggedInHomeScreen : Discard logged out changes
 MergeLoggedInLoggedOut --|> LoggedInHomeScreen : Merge logged out changes
@@ -155,7 +155,7 @@ LoggedOutHomeScreen : ...
 
 MergeLoggedInLoggedOut : ...
 
-SetupLogin : ...
+Login : ...
 
 ```
 
