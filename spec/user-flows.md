@@ -4,63 +4,85 @@
 
 <details><summary>source</summary>
 
+<!-- I don't know why `direction RL` within the subgraphs makes it go top-down.
+     TD doesn't. Maybe it's a bug that they'll fix in which case we'll need to
+     change these to TD. -->
+
 ```mermaid
-classDiagram
+flowchart TD
+	classDef start fill:#8f8;
+	classDef finish fill:#f88;
+  LoggedInHomeScreen:::finish
+  SetupLogin:::finish
+  LoggedOutHomeScreen:::start
 
-LoggedOutHomeScreen --|> Signup : Set Up Account
-Signup --|> LoggedInHomeScreen : Sign Up - Success
-Signup --|> SetupLogin : I already have an account
+  LoggedOutHomeScreen --<big><b>Log In / Sign Up</b></big>--> Signup
+  Signup --<big><b>Sign Up</b></big> - <i>Success</i>--> LoggedInHomeScreen
+  Signup --<big><b>I already have an account</b></big>--> SetupLogin
 
-Signup --|> SignupErrorCredentials : Sign Up - Bad Credentials
-SignupErrorCredentials --|> Signup : Try Again
+  Signup --<big><b>Sign Up</b></big> - <i>Bad Credentials</i>--> SignupErrorCredentials
+  SignupErrorCredentials --<big><b>Try Again</b></big>--> Signup
 
-Signup --|> SignupErrorEmailExists : Sign Up - Email Exists On Server
-SignupErrorEmailExists --|> Signup : Sign up with a different email address
-SignupErrorEmailExists --|> SetupLogin : Log In Instead
+  Signup --<big><b>Sign Up</b></big> - <i>Email Exists On Server</i>--> SignupErrorEmailExists
+  SignupErrorEmailExists --<b>Sign up with a different email address</b>--> Signup
+  SignupErrorEmailExists --<big><b>Log In Instead</b></big>--> SetupLogin
 
-Signup --|> SignupErrorPubKeyExists : Sign Up - Wallet PubKey Exists On Server with different Email
-SignupErrorPubKeyExists --|> SetupLogin : Log In Instead
+  Signup --<big><b>Sign Up</b></big> - <i>Wallet PubKey Exists On Server with different Email</i>--> SignupErrorPubKeyExists
+  SignupErrorPubKeyExists --<big><b>Log In Instead</b></big>--> SetupLogin
 
-Signup --|> SignupErrorPubKeyEmailExists : Sign Up - Wallet PubKey Email Pair Exists On Server
-SignupErrorPubKeyEmailExists --|> SetupLogin : Log In Instead
+  Signup --<big><b>Sign Up</b></big> - <i>Wallet PubKey Email Pair Exists On Server</i>--> SignupErrorPubKeyEmailExists
+  SignupErrorPubKeyEmailExists --<big><b>Log In Instead</b></big>--> SetupLogin
 
-LoggedOutHomeScreen : Trending Videos
-LoggedOutHomeScreen : Set Up Account()
+  subgraph LoggedOutHomeScreen
+		direction RL
+    LoggedOutHomeScreen1[<h3>Trending Videos</h3>]
+    LoggedOutHomeScreen2[<h3>Buttons</h3><ul><li>Log In / Sign Up</li></ul>]
+  end
 
-LoggedInHomeScreen : ...
+  subgraph LoggedInHomeScreen
+		LoggedInHomeScreen1[<h3>Logged In Home Screen</h3>]
+  end
 
-Signup : Enter Credentials
-Signup : * [Server]
-Signup : * [Email]
-Signup : * [Password]
-Signup : -
-Signup : Warnings
-Signup : * Wallet goes on server, but it's encrypted
-Signup : * Don't lose your password! We have *no* recovery options without it.
-Signup : * Make your password strong. Don't trust the server!
-Signup : Sign Up()
-Signup : I already have an account()
+  subgraph SetupLogin
+		SetupLogin1[<h3>Log In</h3>]
+  end
 
-SignupErrorCredentials : Possible Errors
-SignupErrorCredentials : * Server Invalid
-SignupErrorCredentials : * Email Malformed
-SignupErrorCredentials : * Password Not Good Enough
-SignupErrorCredentials : Try Again()
+  subgraph SignupErrorPubKeyEmailExists
+		direction RL
+		SignupErrorPubKeyEmailExists1[An account with your wallet and this email already exists]
+    SignupErrorPubKeyEmailExists2[<h3>Buttons</h3><ul><li>Log In Instead</li></ul>]
+  end
 
-SignupErrorPubKeyExists : An account with your wallet, but not the email you entered, already exists
-SignupErrorPubKeyExists : Note to user
-SignupErrorPubKeyExists : * Change email later if you want, after you log in
-SignupErrorPubKeyExists : Log In Instead()
+	subgraph SignupErrorEmailExists
+		direction RL
+		SignupErrorEmailExists1[This email already exists on this server]
+    SignupErrorEmailExists2[<h3>Buttons</h3><ul><li>Log In Instead</li><li>Sign up with a different email address</li></ul>]
+  end
 
-SignupErrorPubKeyEmailExists : An account with your wallet and this email already exists
-SignupErrorPubKeyEmailExists : Log In Instead()
+  subgraph Signup
+		direction RL
+    Signup1[<h3>Enter Credentials</h3><ul><li>Server</li><li>Email</li><li>Password</li></ul>]
+    Signup2[<h3>Buttons</h3><ul><li>Sign Up</li></ul>]
+    Signup2[<h3>Buttons</h3><ul><li>Sign Up</li><li>I already have an account</li></ul>]
+    Signup3[<h3>Warnings For User</h3><ul><li>Wallet goes on server, but it's encrypted<li>Don't lose your password! We have <b>no</b> recovery options without it.<li>Make your password strong. Don't trust the server!</ul>]
+  end
 
-SignupErrorEmailExists : This email already exists on this server
-SignupErrorEmailExists : Log In Instead()
-SignupErrorEmailExists : Sign up with a different email address()
+  subgraph SignupErrorCredentials
+		direction RL
+		SignupErrorCredentials1[<h3>Possible Errors</h3><ul><li> Server Invalid<li> Email Malformed<li> Password Not Good Enough</ul>]
+    SignupErrorCredentials2[<h3>Buttons</h3><ul><li>Try Again</li></ul>]
+  end
 
-SetupLogin : ...
+
+  subgraph SignupErrorPubKeyExists
+		direction RL
+		SignupErrorPubKeyExists1[An account with your wallet, but not the email you entered, already exists]
+		SignupErrorPubKeyExists2[<h3>Note to user</h3>Change email later if you want, after you log in]
+    SignupErrorPubKeyExists3[<h3>Buttons</h3><ul><li>Log In Instead</li></ul>]
+  end
 ```
+
+
 
 </details>
 
