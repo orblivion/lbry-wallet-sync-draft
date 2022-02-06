@@ -24,7 +24,7 @@ flowchart TD
   SignupErrorCredentials --<big><b>Try Again</b></big>--> Signup
 
   Signup --<big><b>Sign Up</b></big> - <i>Email Exists On Server</i>--> SignupErrorEmailExists
-  SignupErrorEmailExists --<b>Sign up with a different email address</b>--> Signup
+  SignupErrorEmailExists --<big><b>Sign up with a different email address</b></big>--> Signup
   SignupErrorEmailExists --<big><b>Log In Instead</b></big>--> SetupLogin
 
   Signup --<big><b>Sign Up</b></big> - <i>Wallet PubKey Exists On Server with different Email</i>--> SignupErrorPubKeyExists
