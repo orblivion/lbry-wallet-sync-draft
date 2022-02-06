@@ -49,13 +49,13 @@ flowchart TD
 
   subgraph SignupErrorPubKeyEmailExists
 		direction RL
-		SignupErrorPubKeyEmailExists1[An account with your wallet and this email already exists]
+		SignupErrorPubKeyEmailExists1[<h3>Error</h3>An account with your wallet and this email already exists]
     SignupErrorPubKeyEmailExists2[<h3>Buttons</h3><ul><li>Log In Instead</li></ul>]
   end
 
 	subgraph SignupErrorEmailExists
 		direction RL
-		SignupErrorEmailExists1[This email already exists on this server]
+		SignupErrorEmailExists1[<h3>Error</h3>This email already exists on this server]
     SignupErrorEmailExists2[<h3>Buttons</h3><ul><li>Log In Instead</li><li>Sign up with a different email address</li></ul>]
   end
 
@@ -64,19 +64,19 @@ flowchart TD
     Signup1[<h3>Enter Credentials</h3><ul><li>Server</li><li>Email</li><li>Password</li></ul>]
     Signup2[<h3>Buttons</h3><ul><li>Sign Up</li></ul>]
     Signup2[<h3>Buttons</h3><ul><li>Sign Up</li><li>I already have an account</li></ul>]
-    Signup3[<h3>Warnings For User</h3><ul><li>Wallet goes on server, but it's encrypted<li>Don't lose your password! We have <b>no</b> recovery options without it.<li>Make your password strong. Don't trust the server!</ul>]
+    Signup3[<h3>Heads Up For User</h3><ul><li>Wallet goes on server, but it's encrypted<li>Don't lose your password! We have <b>no</b> recovery options without it.<li>Make your password strong. Don't trust the server!</ul>]
   end
 
   subgraph SignupErrorCredentials
 		direction RL
-		SignupErrorCredentials1[<h3>Possible Errors</h3><ul><li> Server Invalid<li> Email Malformed<li> Password Not Good Enough</ul>]
+		SignupErrorCredentials1[<h3>Error</h3><i>One of the following</i><ul><li> Server Invalid<li> Email Malformed<li> Password Not Good Enough</ul>]
     SignupErrorCredentials2[<h3>Buttons</h3><ul><li>Try Again</li></ul>]
   end
 
 
   subgraph SignupErrorPubKeyExists
 		direction RL
-		SignupErrorPubKeyExists1[An account with your wallet, but not the email you entered, already exists]
+		SignupErrorPubKeyExists1[<h3>Error</h3>An account with your wallet, but not the email you entered, already exists]
 		SignupErrorPubKeyExists2[<h3>Note to user</h3>Change email later if you want, after you log in]
     SignupErrorPubKeyExists3[<h3>Buttons</h3><ul><li>Log In Instead</li></ul>]
   end
