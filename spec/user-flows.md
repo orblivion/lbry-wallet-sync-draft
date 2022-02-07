@@ -10,8 +10,8 @@
 
 ```mermaid
 flowchart TD
-	classDef start fill:#8f8;
-	classDef finish fill:#f88;
+  classDef start fill:#8f8;
+  classDef finish fill:#f88;
   LoggedOutHomeScreen:::start
   LoggedInHomeScreen:::finish
   Login:::finish
@@ -34,7 +34,7 @@ flowchart TD
   SignupErrorPubKeyEmailExists --<big><b>Log In Instead</b></big>--> Login
 
   subgraph LoggedOutHomeScreen
-		direction RL
+    direction RL
     LoggedOutHomeScreen1[<h3>Trending Videos</h3>]
     LoggedOutHomeScreen2[<h3>Buttons</h3><ul><li>Log In / Sign Up</li></ul>]
   end
@@ -48,19 +48,19 @@ flowchart TD
   end
 
   subgraph SignupErrorPubKeyEmailExists
-		direction RL
-		SignupErrorPubKeyEmailExists1[<h3>Error</h3>An account with your wallet and this email already exists]
+    direction RL
+    SignupErrorPubKeyEmailExists1[<h3>Error</h3>An account with your wallet and this email already exists]
     SignupErrorPubKeyEmailExists2[<h3>Buttons</h3><ul><li>Log In Instead</li></ul>]
   end
 
-	subgraph SignupErrorEmailExists
-		direction RL
-		SignupErrorEmailExists1[<h3>Error</h3>This email already exists on this server]
+  subgraph SignupErrorEmailExists
+    direction RL
+    SignupErrorEmailExists1[<h3>Error</h3>This email already exists on this server]
     SignupErrorEmailExists2[<h3>Buttons</h3><ul><li>Log In Instead</li><li>Sign up with a different email address</li></ul>]
   end
 
   subgraph Signup
-		direction RL
+    direction RL
     Signup1[<h3>Enter Credentials</h3><ul><li>Server</li><li>Email</li><li>Password</li></ul>]
     Signup2[<h3>Buttons</h3><ul><li>Sign Up</li></ul>]
     Signup2[<h3>Buttons</h3><ul><li>Sign Up</li><li>I already have an account</li></ul>]
@@ -68,16 +68,16 @@ flowchart TD
   end
 
   subgraph SignupErrorCredentials
-		direction RL
-		SignupErrorCredentials1[<h3>Error</h3><i>One of the following</i><ul><li> Server Invalid<li> Email Malformed<li> Password Not Good Enough</ul>]
+    direction RL
+    SignupErrorCredentials1[<h3>Error</h3><i>One of the following</i><ul><li> Server Invalid<li> Email Malformed<li> Password Not Good Enough</ul>]
     SignupErrorCredentials2[<h3>Buttons</h3><ul><li>Try Again</li></ul>]
   end
 
 
   subgraph SignupErrorPubKeyExists
-		direction RL
-		SignupErrorPubKeyExists1[<h3>Error</h3>An account with your wallet, but not the email you entered, already exists]
-		SignupErrorPubKeyExists2[<h3>Note to user</h3>Change email later if you want, after you log in]
+    direction RL
+    SignupErrorPubKeyExists1[<h3>Error</h3>An account with your wallet, but not the email you entered, already exists]
+    SignupErrorPubKeyExists2[<h3>Note to user</h3>Change email later if you want, after you log in]
     SignupErrorPubKeyExists3[<h3>Buttons</h3><ul><li>Log In Instead</li></ul>]
   end
 ```
@@ -94,9 +94,9 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-	classDef start fill:#8f8;
-	classDef finish fill:#f88;
-	classDef editorNote fill:#CCC;
+  classDef start fill:#8f8;
+  classDef finish fill:#f88;
+  classDef editorNote fill:#CCC;
   Login:::start
   LoggedInHomeScreen:::finish
   LoggedOutHomeScreen:::finish
@@ -113,12 +113,12 @@ flowchart TD
 
   subgraph LoggedInHomeScreen
     direction RL
-		LoggedInHomeScreen1[...]
+    LoggedInHomeScreen1[...]
   end
 
   subgraph LoggedOutHomeScreen
     direction RL
-		LoggedOutHomeScreen1[...]
+    LoggedOutHomeScreen1[...]
   end
 
   subgraph MergeLoggedInLoggedOut
