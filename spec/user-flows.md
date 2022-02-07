@@ -40,11 +40,13 @@ flowchart TD
   end
 
   subgraph LoggedInHomeScreen
-		LoggedInHomeScreen1[<h3>Logged In Home Screen</h3>]
+    direction RL
+    LoggedInHomeScreen1[<h3>Logged In Home Screen</h3>...]
   end
 
   subgraph Login
-		Login1[<h3>Log In</h3>]
+    direction RL
+    Login1[<h3>Log In</h3>...]
   end
 
   subgraph SignupErrorPubKeyEmailExists
