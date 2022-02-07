@@ -155,24 +155,47 @@ The only difference between this and Account Recovery is that there is another d
 <details><summary>source</summary>
 
 ```mermaid
-classDiagram
+flowchart TD
+  classDef startGrey fill:#efe,stroke:#aea,color:#aea;
+  classDef finishGrey fill:#fee,stroke:#eaa,color:#eaa;
+  classDef editorNote fill:#CCC;
+  Login:::startGrey
+  Login1:::startGrey
+  LoggedInHomeScreen:::finishGrey
+  LoggedInHomeScreen1:::finishGrey
+  LoggedOutHomeScreen:::finishGrey
+  LoggedOutHomeScreen1:::finishGrey
+  MergeLoggedInLoggedOut3:::editorNote
 
-Login --|> MergeLoggedInLoggedOut : Existing pre-login local changes
-Login --|> LoggedInHomeScreen : No existing pre-login local changes
+  Login --<font color='#aaa'>Log In - Existing pre-login local changes</font>--> MergeLoggedInLoggedOut
 
-MergeLoggedInLoggedOut --|> LoggedInHomeScreen : Discard logged out changes
-MergeLoggedInLoggedOut --|> LoggedInHomeScreen : Merge logged out changes
-MergeLoggedInLoggedOut --|> LoggedOutHomeScreen : Cancel login
+  MergeLoggedInLoggedOut --<font color='#aaa'>Discard logged out changes</font>--> LoggedInHomeScreen
+  MergeLoggedInLoggedOut --<font color='#05f'><big><b>Merge logged out changes</b></big> - <i>success</i></font>--> LoggedInHomeScreen
+  MergeLoggedInLoggedOut --<font color='#aaa'>Cancel login</font>--> LoggedOutHomeScreen
 
-MergeLoggedInLoggedOut --|> MergeLoggedInLoggedOut : Other device pushed an update in the middle of merging
+  MergeLoggedInLoggedOut --<font color='#05f'><big><b>Merge logged out changes</b></big> - <i>Other device pushed an update in the middle of merging</i></font>--> MergeLoggedInLoggedOut
 
-LoggedInHomeScreen : ...
-LoggedOutHomeScreen : ...
+  subgraph LoggedInHomeScreen
+    direction RL
+    LoggedInHomeScreen1[...]
+  end
 
-MergeLoggedInLoggedOut : ...
+  subgraph LoggedOutHomeScreen
+    direction RL
+    LoggedOutHomeScreen1[...]
+  end
 
-Login : ...
+  subgraph MergeLoggedInLoggedOut
+    direction RL
+    MergeLoggedInLoggedOut1[<h3>Prompt</h3>Before you logged in, you took some actions that were saved to your wallet. Would you like to merge them?]
+    MergeLoggedInLoggedOut2[<h3>Buttons</h3><ul><li>Discard logged out changes</li><li>Merge logged out changes</li><li>Don't log in for now</li></ul>]
+    MergeLoggedInLoggedOut3[<i>this is a complicated part<br>this is unlike normal conflict resolution because the baseline is zero, and also the logged out wallet's keypair is discarded</i>]
+  end
 
+  subgraph Login
+    direction RL
+    Login1[...]
+  end
 ```
 
 </details>
