@@ -233,9 +233,11 @@ TODO - other buttons. Change Password, etc? Or is that not this flow?
 flowchart TD
   classDef start fill:#8f8;
   classDef finish fill:#f88;
+  classDef editorNote fill:#CCC;
 
   LoggedInHomeScreen:::start
   DataError:::finish
+  MergeChanges3:::editorNote
 
   LoggedInHomeScreen --<big><b>Make Changes</b></big> - <i>Change committed to server</i>--> LoggedInHomeScreen
   LoggedInHomeScreen --<big><b>Make Changes</b></big> - <i>Conflict on server</i>--> MergeChanges
