@@ -202,6 +202,8 @@ flowchart TD
 
 # Recover with existing wallet file
 
+TODO
+
 <!--
 
 TODO - What if you have a wallet, copy it manually to a few devices, and then try to start the syncing? Make sure that it enters manual recovery mode, because we can't be sure that it's in sync without the metadata trail.
@@ -219,39 +221,57 @@ The metadata is only to make sure that the server isn't lying about how much of 
 
 # Make Logged In changes to wallet
 
+TODO - consider "Periodic Get Wallet" that doesn't lead to data error. If there's no merge conflict, there's no user interaction to model (though we should leave a note about it). What about if there is a conflict? I guess we skip that, because we should instead follow the "make changes" path, since we want to push ASAP, right?
+
+TODO - other buttons. Change Password, etc? Or is that not this flow?
+
 ![](user-flows-diagrams/diagram-4.svg)
 
 <details><summary>source</summary>
 
 ```mermaid
-classDiagram
+flowchart TD
+  classDef start fill:#8f8;
+  classDef finish fill:#f88;
 
-LoggedInHomeScreen --|> LoggedInHomeScreen : Make Changes - Change committed to server
-LoggedInHomeScreen --|> MergeChanges : Make Changes - Conflict on server
-LoggedInHomeScreen --|> DataError : Periodic Get Wallet - Data Error
-LoggedInHomeScreen --|> VisualHash : Check Visual Hash
-VisualHash --|> LoggedInHomeScreen : Go Back
+  LoggedInHomeScreen:::start
+  DataError:::finish
 
-MergeChanges --|> MergeChanges : Commit Merge - Other device pushed an update during MergeChanges
-MergeChanges --|> LoggedInHomeScreen : Commit Merge - Merge committed to server
-MergeChanges --|> LoggedInHomeScreen : Commit Merge - Too many errors [network, etc], giving up for now
-MergeChanges --|> DataError : Commit Merge - Data Error
+  LoggedInHomeScreen --<big><b>Make Changes</b></big> - <i>Change committed to server</i>--> LoggedInHomeScreen
+  LoggedInHomeScreen --<big><b>Make Changes</b></big> - <i>Conflict on server</i>--> MergeChanges
+  LoggedInHomeScreen --<big><b>Periodic Get Wallet</b></big> - <i>Data Error</i>--> DataError
+  LoggedInHomeScreen --<big><b>Check Visual Hash</b></big>--> VisualHash
+  VisualHash --<big><b>Go Back</b></big>--> LoggedInHomeScreen
 
-MergeChanges : Merge changes that were made here and at least one other device without rebasing
-MergeChanges : - this is a complicated part -
-MergeChanges : Commit Merge()
+  MergeChanges --<big><b>Commit Merge</b></big> - <i>Other device pushed an update during MergeChanges</i>--> MergeChanges
+  MergeChanges --<big><b>Commit Merge</b></big> - <i>Merge committed to server</i>--> LoggedInHomeScreen
+  MergeChanges --<big><b>Commit Merge</b></big> - <i>Too many network errors, giving up for now</i>--> LoggedInHomeScreen
+  MergeChanges --<big><b>Commit Merge</b></big> - <i>Data Error</i>--> DataError
 
-LoggedInHomeScreen : Trending Videos
-LoggedInHomeScreen : Make Changes()
-LoggedInHomeScreen : Check Visual Hash()
-LoggedInHomeScreen : Change Password()
-LoggedInHomeScreen : Change Server()
+ subgraph MergeChanges
+    direction RL
+    MergeChanges1[<h3>Prompt</h3>Merge changes that were made here and at least one other device without rebasing]
+    MergeChanges2[<h3>Buttons</h3><ul> <li>Commit Merge</li> </ul>]
+    MergeChanges3[<i>this is a complicated part]
+  end
 
-DataError : ...
+  subgraph LoggedInHomeScreen
+    direction RL
+    LoggedInHomeScreen1[<h3>Trending Videos</h3>]
+    LoggedInHomeScreen2[<h3>Buttons</h3><ul> <li>Make Changes</li> <li>Check Visual Hash</li> <li>Change Password</li> <li>Change Server</li> </ul>]
+  end
 
-VisualHash : Confirm all of your devices are in sync
-VisualHash : - visual hash -
-VisualHash : GoBack()
+  subgraph DataError
+    direction RL
+    DataError1[<h3>Data Error</h3>...]
+  end
+
+  subgraph VisualHash
+    direction RL
+    VisualHash1[<h3>Prompt</h3>Confirm all of your devices are in sync]
+    VisualHash2[<h3>visual hash</h3>...]
+    VisualHash3[<h3>Buttons</h3><ul><li>Go Back</li></ul>]
+  end
 
 ```
 </details>
