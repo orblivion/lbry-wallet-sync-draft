@@ -392,27 +392,42 @@ then the user will need to enter both their old and new passwords on startup. Th
 <details><summary>source</summary>
 
 ```mermaid
-classDiagram
+flowchart TD
+  classDef start fill:#8f8;
+  classDef finish fill:#f88;
 
-DeviceOff --|> AppStartLogin : Start App - Normal
-AppStartLogin --|> LoggedInHomeScreen : Log In - No password change on server
-AppStartLogin --|> LoggedInHomeScreen : Log In - New Password - Password change exists on server. No local wallet changes
+  DeviceOff --<big><b>Start App</b></big> - Normal--> AppStartLogin
+  AppStartLogin --<big><b>Log In</b></big> <br> <i>No password change on server</i>--> LoggedInHomeScreen
+  AppStartLogin --<big><b>Log In</b></big> <br> <i>New Password <br> Password change exists on server. No local wallet changes</i>--> LoggedInHomeScreen
 
-AppStartLogin --|> GetLocalPassword : Log In - New Password - Password change exists on server, local wallet changes exist
-AppStartLogin --|> GetServerPassword : Log In - Old Password - Password change exists on server
+  AppStartLogin --<big><b>Log In</b></big> <br> <i>New Password <br> Password change exists on server, local wallet changes exist</i>--> GetLocalPassword
+  AppStartLogin --<big><b>Log In</b></big> <br> <i>Old Password <br> Password change exists on server</i>--> GetServerPassword
 
-GetLocalPassword --|> LoggedInHomeScreen : Log In - Old Password
-GetServerPassword --|> LoggedInHomeScreen : Log In - New Password
+  GetLocalPassword --<big><b>Log In</b></big> - <i>Old Password</i>--> LoggedInHomeScreen
+  GetServerPassword --<big><b>Log In</b></big> - <i>New Password</i>--> LoggedInHomeScreen
 
-DeviceOff : Start App()
-AppStartLogin : Log In()
-LoggedInHomeScreen : ...
-GetLocalPassword : Looks like you have some changes that you haven't pushed.
-GetLocalPassword : Enter your old password to unlock your wallet so it can be pushed.
-GetLocalPassword : Log In()
-GetServerPassword : Looks like you changed your password from another device.
-GetServerPassword : Enter your new password.
-GetServerPassword : Log In()
+  subgraph DeviceOff
+    direction RL
+    DeviceOff1[<h3>Buttons</h3><ul><li>Start App</li></ul>]
+  end
+  subgraph AppStartLogin
+    direction RL
+    AppStartLogin1[<h3>Buttons</h3><ul><li>Log In</li></ul>]
+  end
+  subgraph LoggedInHomeScreen
+    direction RL
+    LoggedInHomeScreen1[...]
+  end
+  subgraph GetLocalPassword
+    direction RL
+    GetLocalPassword1[<h3>Prompt</h3>Looks like you have some changes that you haven't pushed.<br>Enter your old password to unlock your wallet so it can be pushed.]
+    GetLocalPassword2[<h3>Buttons</h3><ul><li>Log In</li></ul>]
+  end
+  subgraph GetServerPassword
+    direction RL
+    GetServerPassword1[<h3>Prompt</h3>Looks like you changed your password from another device.<br>Enter your new password.]
+    GetServerPassword2[<h3>Buttons</h3><ul><li>Log In</li></ul>]
+  end
 ```
 
 </details>
