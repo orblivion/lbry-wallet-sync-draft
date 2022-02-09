@@ -442,32 +442,45 @@ flowchart TD
 <details><summary>source</summary>
 
 ```mermaid
-classDiagram
+flowchart TD
+  classDef start fill:#8f8;
+  classDef finish fill:#f88;
 
-LoggedInHomeScreen --|> ChangeServer : Change Server
-ChangeServer  --|> BadServer : Confirm - Bad Server
-ChangeServer  --|> ChangeServerConfirmation : Confirm - Success
-BadServer --|> ChangeServer : Try Again
-ChangeServerConfirmation --|> LoggedInHomeScreen : Confirm
+  LoggedInHomeScreen:::finish
+  LoggedInHomeScreen_:::start
 
-LoggedInHomeScreen : Trending Videos
-LoggedInHomeScreen : Make Changes()
-LoggedInHomeScreen : Check Visual Hash()
-LoggedInHomeScreen : Change Password()
-LoggedInHomeScreen : Change Server()
+  LoggedInHomeScreen --<big><b>Change Server</b></big>--> ChangeServer
+  ChangeServer  --<big><b>Confirm</b></big> - Bad Server--> BadServer
+  ChangeServer  --<big><b>Confirm</b></big> - Success--> ChangeServerConfirmation
+  BadServer --<big><b>Try Again</b></big>--> ChangeServer
+  ChangeServerConfirmation --<big><b>Confirm</b></big>--> LoggedInHomeScreen
 
-ChangeServer : We don't trust the server you were at.
-ChangeServer : Gather all of your devices and confirm visual hash to make sure they're all synced first
-ChangeServer : - visual hash -
-ChangeServer : * [New Server URL]
-ChangeServer : Confirm()
+  subgraph LoggedInHomeScreen
+    subgraph LoggedInHomeScreen_
+      direction RL
+      LoggedInHomeScreen1[<h3>Trending Videos</h3>]
+      LoggedInHomeScreen2[<h3>Buttons</h3><ul> <li>Make Changes</li> <li>Check Visual Hash</li> <li>Change Password</li> <li>Change Server</li> </ul>]
+    end
+  end
 
-ChangeServerConfirmation : Confirm new visual hashes to confirm new server
-ChangeServerConfirmation : - visual hash -
-ChangeServerConfirmation : Confirm()
+  subgraph ChangeServer
+    direction RL
+    ChangeServer1[<h3>Prompt</h3>We don't trust the server you were at.<br>Gather all of your devices and confirm visual hash to make sure they're all synced first<br>- visual hash -]
+    ChangeServer2[<h3>Enter Credentials</h3><ul><li>New Server URL</li></ul>]
+    ChangeServer3[<h3>Buttons</h3><ul> <li>Confirm</li> </ul>]
+  end
 
-BadServer : Server Invalid
-BadServer : Try Again()
+  subgraph ChangeServerConfirmation
+    direction RL
+    ChangeServerConfirmation1[<h3>Prompt</h3>Confirm new visual hashes to confirm new server<br>- visual hash -]
+    ChangeServerConfirmation2[<h3>Buttons</h3><ul> <li>Confirm</li> </ul>]
+  end
+
+  subgraph BadServer
+    direction RL
+    BadServer1[<h3>Prompt</h3>Server Invalid]
+    BadServer2[<h3>Buttons</h3><ul> <li>Try Again</li> </ul>]
+  end
 ```
 
 </details>
