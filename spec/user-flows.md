@@ -301,57 +301,79 @@ If a third device also creates a change to the wallet it will have the password 
 
 If there is a wallet change along with the password change, it can be merged in cleanly if there are no local changes. If there are local changes, they can be resolved with MergeChanges after password (B) is confirmed. If another device changes the password _again_ during the MergeChanges screen, the merge will fail simply because the wallet on the server is updated. The new wallet will be pulled, the device will see that the password doesn't match (B), and it will bring up the **password confirmation prompt** again. At this point it can safely discard password (B), because we no longer need the wallet encrypted by password (B). We have yet to make and push a successful merge, so our local baseline is still the wallet encrypted with password (P). All of the changes that we have yet to merge are in the wallet with password (C).
 
+TODO - split this into multiple graphs of the different scenarios. this is way too hard to follow.
+
 ![](user-flows-diagrams/diagram-5.svg)
 
 <details><summary>source</summary>
 
 ```mermaid
-classDiagram
+flowchart TD
+  classDef start fill:#8f8;
+  classDef finish fill:#f88;
 
-LoggedInHomeScreen --|> ChangePassword : Change Password - *only if no un-merged changes present*
-ChangePassword --|> BadPassword : Submit - Bad Password
-ChangePassword --|> ChangePasswordPreempted : Submit - Another device updated the password
-ChangePasswordPreempted --|> ConfirmPassword : Accept New Password Instead
-ChangePassword --|> LoggedInHomeScreen : Submit - Success
-BadPassword --|> ChangePassword : Try Again
+  LoggedInHomeScreen:::finish
+  LoggedInHomeScreen_:::start
 
-LoggedInHomeScreen --|> ConfirmPassword : Other device changes password
-ConfirmPassword --|> ConfirmPassword : Other device changes password during ConfirmPassword
-ConfirmPassword --|> IncorrectPassword : Submit - Incorrect
-ConfirmPassword --|> LoggedInHomeScreen : Submit - Success
-ConfirmPassword --|> MergeChanges : Submit - Success, but we've now decrypted changes that we need to merge
-IncorrectPassword --|> ConfirmPassword : Try Again
+  LoggedInHomeScreen --<big><b>Change Password</b></big> - <br>*only if no un-merged changes present*-->ChangePassword
+  ChangePassword --<big><b>Submit</b></big> - <i>Bad Password</i>-->BadPassword
+  ChangePassword --<big><b>Submit</b></big> - <i>Another device updated the password</i>-->ChangePasswordPreempted
+  ChangePasswordPreempted --<big><b>Accept New Password Instead</b></big>-->ConfirmPassword
+  ChangePassword --<big><b>Submit</b></big> - <i>Success</i>-->LoggedInHomeScreen
+  BadPassword --<big><b>Try Again</b></big>-->ChangePassword
 
-MergeChanges --|> ConfirmPassword : Commit Merge - Other device changes password during MergeChanges
-MergeChanges --|> LoggedInHomeScreen : Commit Merge - Merge committed to server
+  LoggedInHomeScreen --Other device changes password-->ConfirmPassword
+  ConfirmPassword --Other device changes password during ConfirmPassword-->ConfirmPassword
+  ConfirmPassword --<big><b>Submit</b></big> - <i>Incorrect</i>-->IncorrectPassword
+  ConfirmPassword --<big><b>Submit</b></big> - <i>Success</i>-->LoggedInHomeScreen
+  ConfirmPassword --<big><b>Submit</b></big> - <i>Success, but we've now decrypted<br>changes that we need to merge</i>-->MergeChanges
+  IncorrectPassword --<big><b>Try Again</b></big>-->ConfirmPassword
 
-MergeChanges : ...
+  MergeChanges --<big><b>Commit Merge</b></big> - <i>Other device changes password<br>during MergeChanges</i>-->ConfirmPassword
+  MergeChanges --<big><b>Commit Merge</b></big> - <i>Merge committed to server</i>-->LoggedInHomeScreen
 
-LoggedInHomeScreen : Trending Videos
-LoggedInHomeScreen : Make Changes()
-LoggedInHomeScreen : Check Visual Hash()
-LoggedInHomeScreen : Change Password()
-LoggedInHomeScreen : Change Server()
+  subgraph MergeChanges
+    direction RL
+    MergeChanges1[...]
+  end
 
-ChangePassword : Enter Credentials
-ChangePassword : * [Password]
-ChangePassword : Submit()
+  subgraph LoggedInHomeScreen
+    subgraph LoggedInHomeScreen_
+      direction RL
+      LoggedInHomeScreen1[<h3>Trending Videos</h3>]
+      LoggedInHomeScreen2[<h3>Buttons</h3><ul> <li>Make Changes</li> <li>Check Visual Hash</li> <li>Change Password</li> <li>Change Server</li> </ul>]
+    end
+  end
 
-BadPassword : Password Not Good Enough
-BadPassword : Try Again()
+  subgraph ChangePassword
+    direction RL
+    ChangePassword1[<h3>Enter Credentials</h3><ul><li>Password</li><li>Repeat Password</li></ul>]
+    ChangePassword2[<h3>Buttons</h3><ul><li>Submit</li></ul>]
+  end
 
-ChangePasswordPreempted : Looks like you changed your password on another device.
-ChangePasswordPreempted : You need to enter this new password on this device to continue.
-ChangePasswordPreempted : If you still would like to change your password using this device, do so afterwards.
-ChangePasswordPreempted : Accept New Password Instead()
+  subgraph BadPassword
+    direction RL
+    BadPassword1[<h3>Prompt</h3>Password Not Good Enough]
+    BadPassword2[<h3>Buttons</h3><ul><li>Try Again</li></ul>]
+  end
 
-ConfirmPassword : Enter Credentials
-ConfirmPassword : * [Password]
-ConfirmPassword : Submit()
+  subgraph ChangePasswordPreempted
+    direction RL
+    ChangePasswordPreempted1[<h3>Prompt</h3>Looks like you changed your password on another device.<br> You need to enter this new password on this device to continue.<br> If you still would like to change your password using this device, do so afterwards.]
+    ChangePasswordPreempted2[<h3>Buttons</h3><ul><li>Accept New Password Instead</li></ul>]
+  end
 
-IncorrectPassword : Password Does Not Match
-IncorrectPassword : Try Again()
+  subgraph ConfirmPassword
+    direction RL
+    ConfirmPassword1[<h3>Enter Credentials</h3><ul><li>Password</li><li>Repeat Password</li></ul>]
+    ConfirmPassword2[<h3>Buttons</h3><ul><li>Submit</li></ul>]
+  end
 
+  subgraph IncorrectPassword
+    direction RL
+    IncorrectPassword1[<h3>Prompt</h3>Password Does Not Match]
+    IncorrectPassword2[<h3>Buttons</h3><ul><li>Try Again</li></ul>]
+  end
 ```
 
 </details>
