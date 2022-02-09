@@ -63,7 +63,7 @@ flowchart TD
 
   subgraph Signup
     direction RL
-    Signup1[<h3>Enter Credentials</h3><ul><li>Server</li><li>Email</li><li>Password</li></ul>]
+    Signup1[<h3>Enter Credentials</h3><ul><li>Server URL</li><li>Email</li><li>Password</li></ul>]
     Signup2[<h3>Buttons</h3><ul><li>Sign Up</li></ul>]
     Signup2[<h3>Buttons</h3><ul><li>Sign Up</li><li>I already have an account</li></ul>]
     Signup3[<h3>Heads Up For User</h3><ul><li>Wallet goes on server, but it's encrypted<li>Don't lose your password! We have <b>no</b> recovery options without it.<li>Make your password strong. Don't trust the server!</ul>]
@@ -139,7 +139,7 @@ flowchart TD
 
   subgraph Login
     direction RL
-    Login1[<h3>Enter Credentials</h3><ul><li>Server</li><li>Email</li><li>Password</li></ul>]
+    Login1[<h3>Enter Credentials</h3><ul><li>Server URL</li><li>Email</li><li>Password</li></ul>]
     Login2[<h3>Buttons</h3><ul><li>Log In</li></ul>]
   end
 ```
@@ -396,15 +396,18 @@ flowchart TD
   classDef start fill:#8f8;
   classDef finish fill:#f88;
 
+  DeviceOff:::start
+  LoggedInHomeScreen:::finish
+
   DeviceOff --<big><b>Start App</b></big> - Normal--> AppStartLogin
-  AppStartLogin --<big><b>Log In</b></big> <br> <i>No password change on server</i>--> LoggedInHomeScreen
-  AppStartLogin --<big><b>Log In</b></big> <br> <i>New Password <br> Password change exists on server. No local wallet changes</i>--> LoggedInHomeScreen
+  AppStartLogin --<big><b>Log In</b></big> <br> <i>No password change on server</i>-->LoggedInHomeScreen
+  AppStartLogin --<big><b>Log In</b></big> <br> <i>New Password <br> Password change exists on server. No local wallet changes</i>-->LoggedInHomeScreen
 
-  AppStartLogin --<big><b>Log In</b></big> <br> <i>New Password <br> Password change exists on server, local wallet changes exist</i>--> GetLocalPassword
-  AppStartLogin --<big><b>Log In</b></big> <br> <i>Old Password <br> Password change exists on server</i>--> GetServerPassword
+  AppStartLogin --<big><b>Log In</b></big> <br> <i>New Password <br> Password change exists on server, local wallet changes exist</i>-->GetLocalPassword
+  AppStartLogin --<big><b>Log In</b></big> <br> <i>Old Password <br> Password change exists on server</i>-->GetServerPassword
 
-  GetLocalPassword --<big><b>Log In</b></big> - <i>Old Password</i>--> LoggedInHomeScreen
-  GetServerPassword --<big><b>Log In</b></big> - <i>New Password</i>--> LoggedInHomeScreen
+  GetLocalPassword --<big><b>Log In</b></big> - <i>Old Password</i>-->LoggedInHomeScreen
+  GetServerPassword --<big><b>Log In</b></big> - <i>New Password</i>-->LoggedInHomeScreen
 
   subgraph DeviceOff
     direction RL
