@@ -102,11 +102,12 @@ flowchart TD
   Login:::start
   LoggedInHomeScreen:::finish
   LoggedOutHomeScreen:::finish
+  DataError:::finish
   MergeLoggedInLoggedOut3:::editorNote
   DataError3:::editorNote
 
   Login --<big><b>Log In</b></big> - <i>Existing pre-login local changes</i>--> MergeLoggedInLoggedOut
-  Login --<big><b>Log In</b></big> - <i>Data Error<i>--> DataError
+  Login --<big><b>Log In</b></big> - <i>Data Error</i>--> DataError
   Login --<big><b>Log In</b></big> - <i>No existing pre-login local changes</i>--> LoggedInHomeScreen
 
   MergeLoggedInLoggedOut --<big><b>Discard logged out changes</b></big>--> LoggedInHomeScreen
@@ -250,11 +251,11 @@ flowchart TD
   MergeChanges --<big><b>Commit Merge</b></big> - <i>Too many network errors, giving up for now</i>--> LoggedInHomeScreen
   MergeChanges --<big><b>Commit Merge</b></big> - <i>Data Error</i>--> DataError
 
- subgraph MergeChanges
+  subgraph MergeChanges
     direction RL
     MergeChanges1[<h3>Prompt</h3>Merge changes that were made here and at least one other device without rebasing]
     MergeChanges2[<h3>Buttons</h3><ul> <li>Commit Merge</li> </ul>]
-    MergeChanges3[<i>this is a complicated part]
+    MergeChanges3[<i>this is a complicated part</i>]
   end
 
   subgraph LoggedInHomeScreen
