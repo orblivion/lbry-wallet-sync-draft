@@ -324,14 +324,27 @@ This involves user interaction (entering a new local password).
 
 ## Initiating a password change
 
-TODO - maybe can be worded more clearly
-TODO - subsections on all of these
+NOTE: We are assuming here that the "Change Password" button is on the home screen for simplicity. We will likely want to revise this with a settings screen.
 
-Supposing a user wants to change the password from `P0` to `P1` using Device A. They have unmerged local wallet changes on the device, so we prevent them from changing the password until those changes are successfully pushed to the server.
+### Simple Case
 
-Once all local wallet changes are pushed, the user proceeds to the password change screen on Device A. Before submitting the new password, the user decides to make some wallet changes on Device B and push them to the server. When the user goes back and submits the new password on Device A, the device is prevented by the server from submitting because of the wallet changes from Device B. Device A first downloads these changes. Because Device A has no local unmerged changes, we can guarantee that these new changes can be accepted without conflict resolution. Device A then sends the new password to the server without the user receiving any extra prompts.
+A user wants to change the password from `P0` to `P1` using Device A. They click on the Change Password button on their home screen and get a prompt. They try entering a few passwords. The first one fails because it doesn't match. The second one fails because it's not strong enough. The third one succeeds, and they go back to the home screen.
 
-Let's look at a similar scenario: The user opens the password change screen on both Device A and Device B. They submit `P1` on Device B first. When they submit on Device A, they will be forced to download what was just sumbmitted by Device B. What happens next depends on what they submitted on Device A. If it was `P1` as well, it can play out silently like above. If however it was a _different_ password, `P2`, then Device A won't be able to decrypt what was sent by Device B, and will receive a `ChangePasswordPreempted` prompt. The prompt informs the user that they instead need to confirm the password sent from Device B (`P1`), but invites them to change it to `P2` later if they want.
+### Blocked by local wallet changes
+
+A user wants to change the password from `P0` to `P1` using Device A. The password change button is greyed out for the moment, because there are local wallet changes that have not yet been pushed. Later, the changes have been pushed, and the button appears. The user clicks the button, changes their password successfully, and goes back to the home screen.
+
+### Not blocked by remote wallet changes
+
+A user wants to change the password from `P0` to `P1` using Device A. The user clicks the button and enters the new password, but they do not yet submit. They then go to Device B and make some changes to wallet content, and it gets pushed to the server. The user then submits the password they entered on Device A. At this point, the password gets submittend and the user goes back to the home screen.
+
+Under the hood, Device A is interrupted by having to download the wallet changes from Device B before pushing the new password. However we can guarantee that there will be no need for conflict resolution, because there are no wallet changes on Device A. If there are network problems in downloading, the error can be presented to the user the same way as network problems when submitting the password.
+
+### Canceled by remote password change
+
+A user's current password is `P0`. They open the password change screen on both Device A and Device B. They submit `P1` on Device B. They then submit either `P1` or `P2` on Device A. At this point, Device A shows the `ChangePasswordPreempted` prompt which will inform them that the password has been changed on a different device (Device B), that the password they just entered on Device A has been discarded (though they're welcome to submit it again later), and that they now need to confirm the new password (the one submitted on Device B).
+
+NOTE: We could sometimes simplify this for the user: If the user submits `P1` on _both_ devices, Device A would have `P1` in its memory. This could serve as the confirmation for the incoming password change created by Device B. It could skip the `ChangePasswordPreempted` and go straight back to the home screen as if nothing happened. However, we will assume that changing password simultaneously on two devices is rare in the first place. For now we will not complicate our UI design with this minor improvement in user convenience. We are only considering this edge case to make sure we have _something_ to handle it.
 
 ![](user-flows-diagrams/diagram-5.svg)
 
