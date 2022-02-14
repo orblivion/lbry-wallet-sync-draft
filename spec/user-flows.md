@@ -1,9 +1,5 @@
 # Initial Setup
 
-![](user-flows-diagrams/diagram-1.svg)
-
-<details><summary>source</summary>
-
 <!-- I don't know why `direction RL` within the subgraphs makes it go top-down.
      TD doesn't. Maybe it's a bug that they'll fix in which case we'll need to
      change these to TD. -->
@@ -84,15 +80,7 @@ flowchart TD
   end
 ```
 
-
-
-</details>
-
 # Account Recovery
-
-![](user-flows-diagrams/diagram-2.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
 flowchart TD
@@ -145,15 +133,9 @@ flowchart TD
   end
 ```
 
-</details>
-
 # Set Up Additional Device
 
 The only difference between this and Account Recovery is that there is another device connected somewhere. The one place this could change the flow is if that device pushes a change while this device is in the middle of MergeLoggedInLoggedOut.
-
-![](user-flows-diagrams/diagram-3.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
 flowchart TD
@@ -199,8 +181,6 @@ flowchart TD
   end
 ```
 
-</details>
-
 # Recover with existing wallet file
 
 TODO
@@ -225,10 +205,6 @@ The metadata is only to make sure that the server isn't lying about how much of 
 TODO - consider "Periodic Get Wallet" that doesn't lead to data error. If there's no merge conflict, there's no user interaction to model (though we should leave a note about it). What about if there is a conflict? I guess we skip that, because we should instead follow the "make changes" path, since we want to push ASAP, right?
 
 TODO - other buttons. Change Password, etc? Or is that not this flow?
-
-![](user-flows-diagrams/diagram-4.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
 flowchart TD
@@ -277,7 +253,6 @@ flowchart TD
   end
 
 ```
-</details>
 
 # Change Password
 
@@ -346,10 +321,6 @@ A user's current password is `P0`. They open the password change screen on both 
 
 NOTE: We could sometimes simplify this for the user: If the user submits `P1` on _both_ devices, Device A would have `P1` in its memory. This could serve as the confirmation for the incoming password change created by Device B. It could skip the `ChangePasswordPreempted` and go straight back to the home screen as if nothing happened. However, we will assume that changing password simultaneously on two devices is rare in the first place. For now we will not complicate our UI design with this minor improvement in user convenience. We are only considering this edge case to make sure we have _something_ to handle it.
 
-![](user-flows-diagrams/diagram-5.svg)
-
-<details><summary>source</summary>
-
 ```mermaid
 flowchart TD
   classDef start fill:#8f8;
@@ -392,7 +363,6 @@ flowchart TD
     ChangePasswordPreempted2[<h3>Buttons</h3><ul><li>Accept New Password Instead</li></ul>]
   end
 ```
-</details>
 
 ## Confirm a password changed on another device
 
@@ -405,10 +375,6 @@ Let's say we change the password on Device B from `P0` to `P1`. On Device A, we 
 ### Data Errors
 
 If the server presents the device with a new wallet with a password change that is _out of sequence_ for any device (see `lastSyncedById` in the [sync](sync.md) document), we want to know before the user enters the password. It could be a very old password that the user has forgotten, which would leave the user stuck without understanding why. For this reason, the metadata that holds the sequence data should be _unencrypted_.
-
-![](user-flows-diagrams/diagram-6.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
 flowchart TD
@@ -463,13 +429,8 @@ flowchart TD
   end
 ```
 
-</details>
-
 ## Confirm a password change along with additional changes from another device
 
-![](user-flows-diagrams/diagram-7.svg)
-
-<details><summary>source</summary>
 ```mermaid
 flowchart LR
   Device_A<-->Server
@@ -484,7 +445,6 @@ flowchart LR
     Device_A2[<b>Unmerged Local Wallet Changes</b>]
   end
 ```
-</details>
 
 Supposing the user has changed their password (**Sequence 3**) and made additional changes to their wallet before (**Sequence 2**) and after (**Sequence 4**), all on Device B. Device A has not yet applied anything after **Sequence 1**. The latest version of the wallet with all of these changes is on the server, encrypted with the _new_ password. Thus, when Device A receives Changes 2-4 from the server all at once, it cannot read any of them until the user enters the new password into Device A.
 
@@ -495,10 +455,6 @@ It's also possible that, while handling the merge conflict on Device A, the user
 We can't easily prevent these scenarios. We do stop the user from changing the password while there are unmerged local changes _on the same device_, which cuts down on complication. However doing the same _across_ devices, at least at first glance, would require a protocol change that would add more complication than it alleviates. However, if there is enough demand, some more consideration could be given to finding a better solution.
 
 Once a password change is initiated, every client will need to update its password before submitting any further changes. Thus, assuming the clients are behaving properly, the password won't ever accidentally go back.
-
-![](user-flows-diagrams/diagram-8.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
 flowchart TD
@@ -539,8 +495,6 @@ flowchart TD
   end
 ```
 
-</details>
-
 ## Recovering from forgetting a new password just entered.
 
 TODO
@@ -558,10 +512,6 @@ When putting in a new password, they probably shouldn't need to put in their old
 ## Putting it together
 
 Here's a graph that allows for the most complicated scenario: One one device, we change password. However, it is preempted by a password change along with other changes come from another device.
-
-![](user-flows-diagrams/diagram-9.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
 flowchart TD
@@ -627,8 +577,6 @@ flowchart TD
   end
 ```
 
-</details>
-
 # Turn On Application and Log In
 
 There is an edge case when starting the app. If _both_ of the following are true:
@@ -637,10 +585,6 @@ There is an edge case when starting the app. If _both_ of the following are true
 * There are local _unmerged_ changes on the device
 
 then the user will need to enter both their old and new passwords on startup. The old password will decrypt the local wallet, and the new password decrypt the wallet on the server.
-
-![](user-flows-diagrams/diagram-10.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
 flowchart TD
@@ -684,13 +628,7 @@ flowchart TD
   end
 ```
 
-</details>
-
 # Change Server
-
-![](user-flows-diagrams/diagram-11.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
 flowchart TD
@@ -733,5 +671,3 @@ flowchart TD
     BadServer2[<h3>Buttons</h3><ul> <li>Try Again</li> </ul>]
   end
 ```
-
-</details>
