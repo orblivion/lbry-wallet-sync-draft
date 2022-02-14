@@ -277,7 +277,7 @@ This change takes highest priority.
 
 This sometimes involves user interaction (conflict resolution, if there is a merge conflict with local wallet changes).
 
-* Can't happen if there is a **remote password change** pending. This is by virtue of the fact that the local device can't decrypt the remote wallet changes without knowing the remote password.
+* Can't happen if there is a **remote password change** pending. This is by virtue of the fact that the local device can't decrypt the new remote wallet changes without knowing the new remote password.
 
 ### Push Local wallet changes
 
@@ -285,7 +285,7 @@ This requires no user interaction.
 
 * Can't happen if there are **remote wallet changes** pending. We need to merge those in first. However if they merge cleanly with the local changes, it will require no user interaction.
 
-* Can't happen while there is a **remote password change** pending. Without the new remote password the local device can't know if there are also remote wallet changes.
+* Can't happen while there is a **remote password change** pending. Without the new remote password, the local device can't know if there are also remote wallet changes. Besides, from this point on we don't want the local device to produce any new wallets encrypted with the old password; we want to change the local password to match the new remote password.
 
 ### Push local password change
 
@@ -293,7 +293,7 @@ This involves user interaction (entering a new local password).
 
 * Can't happen while there are **local wallet changes** pending: It's forbidden as a rule just to keep our system simpler.
 
-* Can't happen while there are **remote wallet changes** pending: We don't want to overwrite remote wallet changes without merging them in. However, because of our rule against no local changes, we can guarantee that the merge will require no user interaction. We can pull and apply those changes silently if they come while the user is entering a new password.
+* Can't happen while there are **remote wallet changes** pending: We don't want to overwrite remote wallet changes without merging them in. However, because of our rule against local changes, we can guarantee that the merge will require no user interaction. We can pull and apply those changes silently if they come while the user is entering a new password.
 
 * Can't happen if there is a **remote password change** pending: If the remote password changed, there might also be new remote wallet changes that we can't see without decrypting it, so we need to enter the remote new password. If the remote password changes *while* the user is creating a local password change, we will *discard* the local new password and instead adopt the remote new password. This is just to simplify the UI (for both user and developers).
 
@@ -320,6 +320,8 @@ Under the hood, Device A is interrupted by having to download the wallet changes
 A user's current password is `P0`. They open the password change screen on both Device A and Device B. They submit `P1` on Device B. They then submit either `P1` or `P2` on Device A. At this point, Device A shows the `ChangePasswordPreempted` prompt which will inform them that the password has been changed on a different device (Device B), that the password they just entered on Device A has been discarded (though they're welcome to submit it again later), and that they now need to confirm the new password (the one submitted on Device B).
 
 NOTE: We could sometimes simplify this for the user: If the user submits `P1` on _both_ devices, Device A would have `P1` in its memory. This could serve as the confirmation for the incoming password change created by Device B. It could skip the `ChangePasswordPreempted` and go straight back to the home screen as if nothing happened. However, we will assume that changing password simultaneously on two devices is rare in the first place. For now we will not complicate our UI design with this minor improvement in user convenience. We are only considering this edge case to make sure we have _something_ to handle it.
+
+NOTE: We could simplify our design at the expense of the user's convenience, perhaps, by sending the user from `ChangePasswordPreempted` to the home screen instead of the password confirmation screen.
 
 ```mermaid
 flowchart TD
