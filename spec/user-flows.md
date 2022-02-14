@@ -368,15 +368,35 @@ flowchart TD
 
 ## Confirm a password changed on another device
 
-If a user changes the password using Device B, they need to enter that password on Device A as well, so that Device A and Device B can decrypt each other's wallet updates. This is usually initated by the user from Logged-in home screen after they receive an alert that the password has changed. The other possibility is that there was a password conflict between Device A and Device B as described above that sent the user to the `ChangePasswordPreempted` prompt on Device A. The `ChangePasswordPreempted` prompt then sends the user to confirm the password entered into Device B.
+For this section, we are assuming that there are no new remote wallet changes, only _password changes_.
 
-Let's say we take Device A offline and change the password on Device B from `P0` to `P1`, and then to `P2`, and then `P3`. Let's also say that that wallet changes were interspersed between these password changes. Then Device A, which is still on `P0`, comes online. At this point, as always, there is only one wallet on the server, containing all of the updates, and it's encrypted wiht `P3`. The user need not enter `P1` or `P2` into Device A for any of the updates, only `P3`.
+### Simple Case
 
-Let's say we change the password on Device B from `P0` to `P1`. On Device A, we go to the password confirmation prompt but don't enter the password yet. Then we go back to Device B and change the pasword _again_ to `P2`. On Device A, on this same prompt, the user will probably expect `P2` to work, so that's what the program will expect. (We'll poll the server for updates an extra time after the user submits)
+A user has changed the password to `P1` using Device B. The go to their home screen on Device A and see a new button: "Confirm New Password". They click it and are taken to the password confirmation screen. On their first attempt they enter `P1` incorrectly. On the second attempt they get it right and go back to the home screen.
 
-### Data Errors
+### Multi Change Case
 
-If the server presents the device with a new wallet with a password change that is _out of sequence_ for any device (see `lastSyncedById` in the [sync](sync.md) document), we want to know before the user enters the password. It could be a very old password that the user has forgotten, which would leave the user stuck without understanding why. For this reason, the metadata that holds the sequence data should be _unencrypted_.
+A user has changed the password multiple times using Device B: from `P0` to `P1` to `P2` to `P3`, while Device A has been offline. The user takes Device A online again, and sees the "Confirm New Password" button on their homescreen. They click it, enter `P3` successfully and return to the home screen.
+
+Under the hood, any wallet on the server (assuming it's working properly) will at that point contain all of the latest data. It will be encrypted using the latest password. Previous password changes do not matter.
+
+### Multi Change During Prompt Case
+
+A user has changed the password from `P0` to `P1` using Device B. The user picks up Device A and sees the "Confirm New Password" screen on their homescreen. They click it, but don't enter the password yet. They realize that they prefer a different password. They go to Device B and change the password again from `P1` to `P2`. They go back to the password confirmation screen on Device A and enter `P2`. This is accepted and the user is taken back to the home screen.
+
+Under the hood, Device A will pull the latest wallet from the server before confirming a password change. This is to check for such additional password changes. The latest password is the one that will be expected.
+
+NOTE: This is a rare case, and it would be simpler to design and implement for the application to expect `P0` rather than pulling from the server before accepting. However, rare as this is, it may be good to avoid confusing the user. The user probably expects the most recently submitted password to work. However, this can be changed. One alternative could perhaps be to display an error on Device A and send the user to the home screen instead.
+
+### Start from Preempted Case
+
+A user tried to use the password change screens on both Device A and Device B at the same time, and ended up on `ChangePasswordPreempted` on Device A. From here, they are sent to the password confirmation screen. They successfully enter the password originally submitted on Device B, and return to the home screen.
+
+### Data Error Case
+
+The user has changed the password using Device B. On Device A, instead of seeing the "Confirm New Password" button, they see a scary looking "Sync Error" alert. They click it and find that there was a problem with the latest wallet sent by Device B, and that they need to enter Error Recovery Mode.
+
+Under the hood: If the server presents the device with a new wallet with a password change that is _out of sequence_ for any device (see `lastSyncedById` in the [sync](sync.md) document), we want to know *before* the user enters the password. It could be a very old password that the user has forgotten, which would leave the user stuck without understanding why. For this reason, the metadata that holds the sequence data should be _unencrypted_.
 
 ```mermaid
 flowchart TD
