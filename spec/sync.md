@@ -36,10 +36,6 @@ Server refuses new wallet if:
 
 Devices make changes and send them to the server, incrementing sync number each time. The other device receives every version.
 
-![](sync-diagrams/diagram-1.svg)
-
-<details><summary>source</summary>
-
 ```mermaid
   sequenceDiagram
     participant Device A
@@ -58,12 +54,6 @@ Devices make changes and send them to the server, incrementing sync number each 
     Server->>Device B: Get walletState Sequence 6
 ```
 
-</details>
-
-![](sync-diagrams/diagram-2.svg)
-
-<details><summary>source</summary>
-
 ```mermaid
   flowchart LR
     s4[Sequence 4]
@@ -78,15 +68,9 @@ Devices make changes and send them to the server, incrementing sync number each 
     c2 --> s6
 ```
 
-</details>
-
 # Basic Syncing, not every update seen by other device
 
 Devices make changes and send them to the server, incrementing sync number each time. The other device doesn't receive every version (perhaps due to network issues). Devices have no way of knowing whether every other device in the system has received their updates (until those clients make their own changes and sends them to the server).
-
-![](sync-diagrams/diagram-3.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
   sequenceDiagram
@@ -105,12 +89,6 @@ Devices make changes and send them to the server, incrementing sync number each 
     Server->>Device B: Get walletState Sequence 7
 ```
 
-</details>
-
-![](sync-diagrams/diagram-4.svg)
-
-<details><summary>source</summary>
-
 ```mermaid
   flowchart LR
     s5[Sequence 5]
@@ -121,15 +99,10 @@ Devices make changes and send them to the server, incrementing sync number each 
 
     s5 --> c1 --> s6 --> c2 --> s7
 ```
-</details>
 
 # Merging - Basic
 
 Both devices make changes. Device A is able to send its changes to the server. Device B is blocked when it tries to send because Device A got there first. Device B first has to pull in Device A's changes from the server, merge the changes together, and send the result back.
-
-![](sync-diagrams/diagram-5.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
   sequenceDiagram
@@ -154,12 +127,6 @@ Both devices make changes. Device A is able to send its changes to the server. D
     Server->>Device A: Get walletState Sequence 7
 ```
 
-</details>
-
-![](sync-diagrams/diagram-6.svg)
-
-<details><summary>source</summary>
-
 ```mermaid
   flowchart LR
     s5[Sequence 5]
@@ -179,8 +146,6 @@ Both devices make changes. Device A is able to send its changes to the server. D
     style m fill:#9f9
 ```
 
-</details>
-
 # Merging - Multiple Incoming
 
 TODO - This one is a WIP.
@@ -189,10 +154,6 @@ This has to do with merging in multiple times before pushing back. For simplicit
 
 NOTE: An advancement we could make would be to have intermittent merge bases. We may need to alo store the original merge base of sequence 5 (see below).
 
-
-![](sync-diagrams/diagram-7.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
   sequenceDiagram
@@ -223,12 +184,6 @@ NOTE: An advancement we could make would be to have intermittent merge bases. We
     Server->>Device A: Get walletState Sequence 8
 ```
 
-</details>
-
-![](sync-diagrams/diagram-8.svg)
-
-<details><summary>source</summary>
-
 ```mermaid
   flowchart LR
     s5[Sequence 5]
@@ -246,8 +201,6 @@ NOTE: An advancement we could make would be to have intermittent merge bases. We
     style m fill:#9f9
 ```
 
-</details>
-
 
 
 
@@ -261,10 +214,6 @@ TODO - server edits sequence number. Device stops it by checking signature.
 # Dishonest Server - Lower Sequence
 
 What if the server were dishonest - presenting older versions of the walletState to devices? The wallet will discover it right away and enter Error Recovery Mode.
-
-![](sync-diagrams/diagram-9.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
   sequenceDiagram
@@ -284,17 +233,11 @@ What if the server were dishonest - presenting older versions of the walletState
     Note right of Device B: Error Recovery Mode
 ```
 
-</details>
-
 # Dishonest Server - Merging Divergent Histories
 
 Let's say the dishonest (or maybe buggy) server is split into states: ServerX and ServerY, with the goal of trying to trick the devices into an inconsistent sync state. This would be a situation where the sequence numbers are the same, the data may be similar, but it's not exactly the same.
 
 The servers will start the with the same state, and both devices are up to date. The current walletState has a sequence of 5 and was pushed by Device B. (sequence 4 was previously pushed by Device A).
-
-![](sync-diagrams/diagram-10.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
   sequenceDiagram
@@ -309,13 +252,7 @@ The servers will start the with the same state, and both devices are up to date.
     Note right of Device B: deviceB.mergeBaseWalletState=server.walletState
 ```
 
-</details>
-
 Next, both devices make local changes and push their walletState with Sequence 6. An honest server would reject at least one of them. In this case, the server dishonestly creates an alternate timeline for each, as ServerX and ServerY. For convenience, we will refer to these sequences as Sequence 6.A and Sequence 6.B, but of course the sequence value for both will simply be 6:
-
-![](sync-diagrams/diagram-11.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
   sequenceDiagram
@@ -339,13 +276,7 @@ Next, both devices make local changes and push their walletState with Sequence 6
     Note left of Device A: deviceB.walletState.lastSynced[deviceB.id].sequence=5
 ```
 
-</details>
-
 Now the server attempts to cause trouble by connecting Device B to ServerX. Device B pulls, and sees Sequence 6.A:
-
-![](sync-diagrams/diagram-12.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
   sequenceDiagram
@@ -361,15 +292,10 @@ Now the server attempts to cause trouble by connecting Device B to ServerX. Devi
     Note right of Device B: ... serverX.walletState != deviceB.walletState)
     Note right of Device B: Error Recovery Mode
 ```
-</details>
 
 Device B can see that the walletState's sequence number didn't change, and yet the walletState is different. This is a straightforward indication that things are not going as expected, so it enters Error Recovery Mode.
 
 But what if the dishonest server was a little smarter. Instead of giving Device B access to Sequence 6.A, it waits until Device A makes one more change and pushes Sequence 7. Again, Device A doesn't know about Sequence 6.B, so it still believes that Device B's merge base is 5:
-
-![](sync-diagrams/diagram-13.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
   sequenceDiagram
@@ -384,13 +310,7 @@ But what if the dishonest server was a little smarter. Instead of giving Device 
     Note left of ServerX: serverX.walletState.lastSynced[deviceB.id].sequence=5
 ```
 
-</details>
-
 Now once again the server attempts to cause trouble by connecting Device B to ServerX, attempting to trick Device B into accepting Sequence 7:
-
-![](sync-diagrams/diagram-14.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
   sequenceDiagram
@@ -405,17 +325,12 @@ Now once again the server attempts to cause trouble by connecting Device B to Se
     Note right of Device B: (serverX.walletState.lastSynced[deviceB.id].sequence != deviceB.walletState.sequence)
     Note right of Device B: Error Recovery Mode
 ```
-</details>
 
 Because Device B last pushed Sequence 6.B, it doesn't see anything wrong by looking merely at the sequence number. What would happen if it accepted it?
 
 With an honest server, if Device B successfully pushed Sequence 6.B, Sequence 7 would include Changes c-1, c-2, and c-3. Because of our tricky server diverging the histories, it does not include Change c-2.
 
 Logically speaking, Sequence 5 is the proper merge base between Sequence 7 and Sequence 6.B:
-
-![](sync-diagrams/diagram-15.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
   flowchart LR
@@ -434,13 +349,7 @@ Logically speaking, Sequence 5 is the proper merge base between Sequence 7 and S
     style m fill:#9f9
 ```
 
-</details>
-
 However, Device B considers Sequence 6B to be the merge base. This means that if Device B were to accept Sequence 7, it would effectively _revert_ Change c-2:
-
-![](sync-diagrams/diagram-16.svg)
-
-<details><summary>source</summary>
 
 ```mermaid
   flowchart LR
@@ -461,8 +370,6 @@ However, Device B considers Sequence 6B to be the merge base. This means that if
     style m fill:#f99
     style rc2 fill:#f99
 ```
-
-</details>
 
 Device B prevents this by looking at `lastSynced`. Device B sees that `serverX.walletState.lastSynced[deviceB.id]` is still 5, while `deviceB.walletState.sequence` is 6. This tells Device B that Sequence 7 does not include Sequence 6.B (and thus Change c-2). It means that somehow or other, the server and clients got into an inconsistent state. To prevent further trouble, Device B goes into Error Recovery Mode.
 
