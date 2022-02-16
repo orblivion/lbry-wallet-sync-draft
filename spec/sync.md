@@ -111,7 +111,11 @@ Note that at this point the first device has no way of knowing which other devic
 
 # Merging - Basic
 
-Both devices make changes. Device A is able to send its changes to the server. Device B is blocked when it tries to send because Device A got there first. Device B first has to pull in Device A's changes from the server, merge the changes together, and send the result back.
+Now we introduce merging. Device A and Device B _both_ make changes, as in an earlier example. However here they both make their changes at around the same time. Neither are aware of the others' change and they try pushing their wallets to the server as Sequence 6. Device A gets there first and succeeds. Device B is blocked because the server will not accept Sequence 6 a second time. (Here we assume that the server is behaving correctly, but we will see later that we have some provisions in case it is not).
+
+Device B takes this as an indication that it is not up to date. It downloads Sequence 6 from the server. It then performs a **merge** between Sequence 6 (which includes Change c-1) and its own local state (which includes Change c-2). The **baseline** of this merge, i.e. the most recent common version between the two, is Sequence 5.
+
+In some cases, if c-1 and c-2 deal with the same data, this merge will require interaction from the user in order to resolve it.
 
 ```mermaid
   sequenceDiagram
