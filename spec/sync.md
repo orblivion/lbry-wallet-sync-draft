@@ -150,7 +150,7 @@ Both devices make changes. Device A is able to send its changes to the server. D
 
 Consider a scenario that begins the same way. Device A and Device B both create changes (c-1 and c-2). They both try to push their updated wallets as Sequence 6, and Device A gets there first. Device B is blocked, and pulls the new Sequence 6 (just created by Device A) from the server.
 
-Device B merges in its change c-2 with Sequence 6 (containing c-1 created by Device A). Both c-1 and c-2 are originally on top of _Sequence 5_, so Sequence 5 will be the baseline.
+Device B merges in its change c-2 with Sequence 6 (containing c-1 created by Device A). Both c-1 and c-2 are originally on top of _Sequence 5_, so Sequence 5 will be the merge baseline.
 
 ```mermaid
   sequenceDiagram
@@ -172,7 +172,7 @@ Device B merges in its change c-2 with Sequence 6 (containing c-1 created by Dev
     Device B->>Device B: MergeIn(Sequence 6, Baseline=Sequence 5)
 ```
 
-Meanwhile, Device B creates change c-3 and pushes the updated wallet to the server as Sequence 7. Device B tries to push its merge of c-1 and Sequence 6 as Sequence 7, and _again_ fails due to Device A getting there first. Device B pulls the new Sequence 7 (just created by Device A) from the server.
+Meanwhile, Device A creates change c-3 and pushes the updated wallet to the server as Sequence 7. Device B tries to push its merge of c-1 and Sequence 6 as Sequence 7, and _again_ fails due to Device A getting there first. Device B pulls the new Sequence 7 (just created by Device A) from the server.
 
 At this point, the previous merge is _discarded_. Device B merges in its change c-2 with Sequence 6 (containing c-1 and c-3 created by Device A). The common base of c-1, c-2 and c-3 is still Sequence 5, so Sequence 5 will _still be the baseline_.
 
