@@ -608,6 +608,11 @@ There is an edge case when starting the app. If _both_ of the following are true
 
 then the user will need to enter both their old and new passwords on startup. The old password will decrypt the local wallet, and the new password decrypt the wallet on the server.
 
+* Can we just push all changes before they quit? We can certainly try, but we can't guarantee it.
+* Can we just delete all changes before they quit? Figuring out a way to do this without them losing important data may be tough.
+
+It may be simpler to just find a way to account for the rare case that they have data on startup. And we can do our best to keep this as rare as possible by the above two methods.
+
 ```mermaid
 flowchart TD
   classDef start fill:#8f8;
