@@ -1,3 +1,43 @@
+# Key
+
+This document describes the flow for users in as many interesting scenarios as we can reasonably consider. States will how what the screen will show, what buttons the user can push, etc. The arrows will indicate what caused the state to change, along with caveats. Usually the user pushed a button, and a context surrounding it (success, invalid input, etc).
+
+Since these charts can get a little gnarly, we'll make it a little easier to follow by coloring the starting states <font color="green">**green**</font> and the ending states <font color="red">**red**</font>.
+
+```mermaid
+flowchart TD
+  classDef start fill:#8f8;
+  classDef finish fill:#f88;
+  Start:::start
+  Error:::finish
+  Complete:::finish
+
+  Start --<big><b>Push a button</b></big>--> Next
+  Next --<big><b>Push another button</b></big> <i>It didn't work</i>--> Error
+  Next --<big><b>Push another button</b></big> <i>Success</i>--> Complete
+```
+
+Sometimes a starting state will also be the ending state for a given scenario. For instance, a user starts on a home screen, performs an action, and is back on the home screen doing what they were doing before. In this case, we color the state both <font color="green">**green**</font> and <font color="red">**red**</font>.
+
+```mermaid
+flowchart TD
+  classDef start fill:#8f8;
+  classDef finish fill:#f88;
+
+  LoggedInHomeScreen:::finish
+  LoggedInHomeScreen_:::start
+
+  LoggedInHomeScreen --<big><b>Do something</b></big>--> Next
+  Next --<big><b>Ok We're Done</b></big> <i>Success</i>--> LoggedInHomeScreen
+
+  subgraph LoggedInHomeScreen
+    subgraph LoggedInHomeScreen_
+      direction RL
+      LoggedInHomeScreen1[...]
+    end
+  end
+```
+
 # Initial Setup
 
 <!-- I don't know why `direction RL` within the subgraphs makes it go top-down.
