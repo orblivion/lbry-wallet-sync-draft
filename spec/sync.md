@@ -150,7 +150,7 @@ Both devices make changes. Device A is able to send its changes to the server. D
 
 Now let's consider a similar scenario: Device B is forced to merge in changes from Device A _twice_ before being able to push back the result.
 
-It begins the same way as the basic merge: Device A and Device B both create changes (c-1 and c-2). They both try to push their updated wallets as Sequence 6, and Device A gets there first. Device B is blocked, and pulls the new Sequence 6 (just created by Device A) from the server.
+It begins the same way as the basic merge: Device A and Device B both create changes (c-1 and c-2 respectively). They both try to push their updated wallets as Sequence 6, and Device A gets there first. Device B is blocked, and pulls the new Sequence 6 (just created by Device A) from the server.
 
 Device B merges in its change c-2 with Sequence 6 (containing c-1 created by Device A). Both c-1 and c-2 are originally on top of _Sequence 5_, so Sequence 5 will be the merge baseline.
 
