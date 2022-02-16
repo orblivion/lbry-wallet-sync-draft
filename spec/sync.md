@@ -113,7 +113,7 @@ Note that at this point the first device has no way of knowing which other devic
 
 Now we introduce merging, and the scenario gets a little more complicated. Device A and Device B _both_ make changes c-1 and c-2 respectively, as in an earlier example. However here they both make their changes at around the same time. Device A pushes its change as Sequence 6, and Device B downloads it.
 
-At this point, Device B can't simply accept this new version or it would lose Change c-2. It performs a **merge** between Sequence 6 (which includes Change c-1) and its own local state (which includes Change c-2). Changes c-5 and c-6 are both on top of Sequence 5, which makes Sequence 5 the **baseline** of this merge. The baseline is the most recent common version between the two versions to be merged.
+At this point, Device B can't simply accept this new version or it would lose Change c-2. It performs a **merge** between Sequence 6 (which includes Change c-1) and its own local state (which includes Change c-2). Changes c-1 and c-2 are both on top of Sequence 5, which makes Sequence 5 the **baseline** of this merge. The baseline is the most recent common version between the two versions to be merged.
 
 In some cases, particularly if c-1 and c-2 both affect the same part of the data, this merge will require interaction from the user in order to resolve it.
 
