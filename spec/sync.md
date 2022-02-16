@@ -113,7 +113,7 @@ Note that at this point the first device has no way of knowing which other devic
 
 Now we introduce merging, and the scenario gets a little more complicated. Device A and Device B _both_ make changes c-1 and c-2 respectively, as in an earlier example. However here they both make their changes at around the same time. Device A pushes its change as Sequence 6, and Device B downloads it.
 
-At this point, Device B can't simply accept this new version or it would lose Change c-2. It performs a **merge** between Sequence 6 (which includes Change c-1) and its own local state (which includes Change c-2). The **baseline** of this merge, i.e. the most recent common version between the two, is Sequence 5.
+At this point, Device B can't simply accept this new version or it would lose Change c-2. It performs a **merge** between Sequence 6 (which includes Change c-1) and its own local state (which includes Change c-2). Changes c-5 and c-6 are both on top of Sequence 5, which makes Sequence 5 the **baseline** of this merge. The baseline is the most recent common version between the two versions to be merged.
 
 In some cases, particularly if c-1 and c-2 both affect the same part of the data, this merge will require interaction from the user in order to resolve it.
 
@@ -194,7 +194,7 @@ Now let's alter the scenario a little more. This time, Device B is forced to mer
 
 It begins the same way as before: Device A and Device B both create changes (c-1 and c-2 respectively). They both try to push their updated wallets as Sequence 6, and Device A gets there first. Device B is blocked, and pulls the new Sequence 6 (just created by Device A) from the server.
 
-Device B merges in its change c-2 with Sequence 6 (containing c-1 created by Device A). Both c-1 and c-2 are originally on top of _Sequence 5_, so Sequence 5 will be the merge baseline.
+Device B merges in its local changes (containing Change c-2) with Sequence 6 (containing c-1). Again, Sequence 5 is the merge baseline.
 
 ```mermaid
   sequenceDiagram
@@ -216,9 +216,9 @@ Device B merges in its change c-2 with Sequence 6 (containing c-1 created by Dev
     Device B->>Device B: MergeIn(Sequence 6, Baseline=Sequence 5)
 ```
 
-However this time, before Device B can push its merge of c-1 and Sequence 6 as Sequence 7, Device A creates change c-3 and pushes the updated wallet to the server as Sequence 7. Device B _again_ fails to push due to Device A getting there first. Device B again pulls from the server the new wallet created by Device A, Sequence 7.
+However this time, before Device B can push its merge of c-1 and Sequence 6 as Sequence 7, Device A creates a new wallet change, c-3, and pushes the updated wallet to the server as Sequence 7. Device B _again_ fails to push due to Device A getting there first. Device B again pulls from the server to get the new wallet created by Device A, Sequence 7.
 
-At this point, the previous merge on Device B is **discarded**. Device B merges in its change c-2 with Sequence 6 (containing c-1 and c-3 created by Device A). The common base of c-1, c-2 and c-3 is still Sequence 5, so **Sequence 5 will still be the merge baseline**.
+At this point, the previous merge on Device B is **discarded**. Device B merges in its Change c-2 with Sequence 7 (containing c-1 and c-3 created by Device A). The common base of c-1, c-2 and c-3 is still Sequence 5, so *Sequence 5 will still be the merge baseline*.
 
 Finally, Device B is able to send back its merged wallet uninterrupted as Sequence 8.
 
@@ -240,7 +240,7 @@ Finally, Device B is able to send back its merged wallet uninterrupted as Sequen
     Server->>Device A: Get walletState Sequence 8
 ```
 
-The resulting version graph shows the simple relationship between versions (identified by "Sequence" numbers) and changes.
+The resulting version graph shows the simple relationship between versions (identified by "Sequence" numbers) and changes, despite the first failed attempt at a merge.
 
 ```mermaid
   flowchart LR
@@ -260,7 +260,7 @@ The resulting version graph shows the simple relationship between versions (iden
     style m fill:#9f9
 ```
 
-If the merge of c-1 and c-2 requires user interaction, that interaction will need to be repeated when merging c-1 c-2 and c-3. This is a trade off of user convenience for simplicity in design, but this is expected to be a rare case.
+If the failed merge of c-1 and c-2 required user interaction, that interaction would need to be repeated when merging c-1 c-2 and c-3. This is a trade off of user convenience for simplicity in design, but this is expected to be a rare case.
 
 NOTE: If this becomes a big usability problem, perhaps it would be possible to save some sort of intermediate state from the first merge attempt to avoid doing it the second time.
 
