@@ -77,7 +77,9 @@ Each new version that gets pushed to the server has a new Sequence number that t
 
 # Basic Syncing, not every update seen by other device
 
-Devices make changes and send them to the server, incrementing sync number each time. The other device doesn't receive every version (perhaps due to network issues). Devices have no way of knowing whether every other device in the system has received their updates (until those clients make their own changes and sends them to the server).
+A slightly less basic scenario is one where a device creates and uploads two or more wallet changes before other devices download them. This may happen if the receiving devices are offline, if there are network issues, etc. As before, the sequence number increments for each upload. The device that downloads the update sees that the Sequence number has increaed by more than 1, but so long as it's a higher number it knows it's newer and there is no problem.
+
+Note that at this point the first device has no way of knowing which other devices have received which of its updates.
 
 ```mermaid
   sequenceDiagram
