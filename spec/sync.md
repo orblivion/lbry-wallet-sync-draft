@@ -34,7 +34,7 @@ Server refuses new wallet if:
 
 # Basic Syncing, every update seen by other device
 
-The most basic scenario is that every time a device makes a local change to its wallet and pushes it to the server, every other device downloads it promptly. Only after that does the first device (or any other device) make more changes and push them to the server.
+The most basic scenario is that every time a device makes a local change to its wallet and pushes it to the server, every other device downloads it promptly. The first device (or any other device) later makes more changes and again push them to the server, other devices download them promptly, and so on.
 
 Each new version that gets pushed to the server has a new Sequence number that the server and devices use to make sure everything is up to date, and changes are not overwritten. More on this below.
 
