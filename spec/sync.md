@@ -231,11 +231,13 @@ The resulting version graph shows the simple relationship between versions (iden
     style m fill:#9f9
 ```
 
-NOTE: If the merge of c-1 and c-2 requires user interaction, that interaction will need to be repeated when merging c-1 c-2 and c-3. This is a trade off of user convenience for simplicity in design, but this is expected to be a rare case. It may be possible to save some sort of intermediate state to avoid the repetition if this becomes a problem.
+If the merge of c-1 and c-2 requires user interaction, that interaction will need to be repeated when merging c-1 c-2 and c-3. This is a trade off of user convenience for simplicity in design, but this is expected to be a rare case.
+
+NOTE: If this becomes a big usability problem, perhaps it would be possible to save some sort of intermediate state from the first merge attempt to avoid doing it the second time.
 
 # Dishonest Server - Altered Wallet
 
-Devices will notice if the server tampers with a walletState because the signature will fail. If a device receives a tampered walletState from the server, it will enter Error Recovery Mode.
+Devices will notice if the server tampers with a walletState (including changing metadata such as the Sequence number) because the signature will fail. If a device receives a tampered walletState from the server, it will enter Error Recovery Mode.
 
 ```mermaid
   sequenceDiagram
