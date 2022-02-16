@@ -222,7 +222,25 @@ NOTE: If the merge of c-1 and c-2 requires user interaction, that interaction wi
 
 # Dishonest Server - Altered Wallet
 
-TODO - server edits sequence number. Device stops it by checking signature.
+Devices will notice if the server tampers with a walletState because the signature will fail. If a device receives a tampered walletState from the server, it will enter Error Recovery Mode.
+
+```mermaid
+  sequenceDiagram
+    participant Device A
+    participant Server
+    participant Device B
+
+    Note right of Server: Sequence 4
+
+    Device A->>Device A: Create Change c-1
+    Device A->>Server: Put walletState Sequence 5
+    Note right of Server: Sequence 5
+    Server->>Server: Alter wallet
+    Note right of Server: Sequence 5.Altered (dishonest)
+
+    Server->>Device B: Get walletState Sequence 5.Altered
+    Note right of Device B: Error Recovery Mode
+```
 
 # Dishonest Server - Lower Sequence
 
