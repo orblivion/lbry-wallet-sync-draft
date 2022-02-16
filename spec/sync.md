@@ -32,6 +32,8 @@ Server refuses new wallet if:
   * server.walletState.lastSyncedById[id].sequence != newWalletState.lastSyncedById[id].sequence for all other device ids
   * server.walletState.lastSyncedById[id].hash != newWalletState.lastSyncedById[id].hash for all other device ids
 
+TODO - Maybe we introduce all of the above stuff as it comes up the diagrams below? may be easier to follow.
+
 # Basic Syncing, every update seen by other device
 
 The most basic scenario is that every time a device makes a local change to its wallet and pushes it to the server, every other device downloads it promptly. The first device (or any other device) later makes more changes and again pushes them to the server, other devices download them promptly, and so on.
