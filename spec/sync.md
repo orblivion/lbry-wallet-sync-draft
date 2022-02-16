@@ -161,7 +161,7 @@ In some cases, particularly if c-1 and c-2 both affect the same part of the data
 
 What if the actions of Device A and Device B in the previous scenario were even more concurrent?
 
-Let's suppose that the timing is such that Device B doesn't notice in time that Device A pushed Sequence 6 to the server. Device B tries pushing its local version (with Change c-2) as Sequence 6. The server rejects it because it will not accept Sequence 6 a second time. (Here we assume that the server is behaving correctly. We will see later that we have some provisions in case it is not.).
+Let's alter the previous scenario slightly, and now suppose that the timing is such that Device B doesn't notice in time that Device A pushed Sequence 6 to the server. Device B tries pushing its local version (with Change c-2) as Sequence 6. The server rejects it because it will not accept Sequence 6 a second time. (Here we assume that the server is behaving correctly. We will see later that we have some provisions in case it is not.).
 
 Device B takes this as an indication that it is not up to date. It downloads Sequence 6 from the server and proceeds with the merge as in the previous example.
 
