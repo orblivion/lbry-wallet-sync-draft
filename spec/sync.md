@@ -34,7 +34,9 @@ Server refuses new wallet if:
 
 # Basic Syncing, every update seen by other device
 
-Devices make changes and send them to the server, incrementing sync number each time. The other device receives every version.
+The most basic scenario is that every time a device makes a local change to its wallet and pushes it to the server, every other device downloads it promptly. Only after that does the first device (or any other device) make more changes and push them to the server.
+
+Each new version that gets pushed to the server has a new Sequence number that the server and devices use to make sure everything is up to date, and changes are not overwritten. More on this below.
 
 ```mermaid
   sequenceDiagram
@@ -48,10 +50,16 @@ Devices make changes and send them to the server, incrementing sync number each 
     Device A->>Server: Put walletState Sequence 5
     Note right of Server: Sequence 5
     Server->>Device B: Get walletState Sequence 5
+
     Device A->>Device A: Create Change c-2
     Device A->>Server: Put walletState Sequence 6
     Note right of Server: Sequence 6
     Server->>Device B: Get walletState Sequence 6
+
+    Device B->>Device B: Create Change c-3
+    Device B->>Server: Put walletState Sequence 7
+    Note right of Server: Sequence 7
+    Server->>Device A: Get walletState Sequence 7
 ```
 
 ```mermaid
@@ -59,13 +67,12 @@ Devices make changes and send them to the server, incrementing sync number each 
     s4[Sequence 4]
     s5[Sequence 5]
     s6[Sequence 6]
+    s7[Sequence 7]
     c1[Change c-1]
     c2[Change c-2]
+    c3[Change c-3]
 
-    s4 --> c1
-    c1 --> s5
-    s5 --> c2
-    c2 --> s6
+    s4 --> c1 --> s5 --> c2 --> s6 --> c3 --> s7
 ```
 
 # Basic Syncing, not every update seen by other device
