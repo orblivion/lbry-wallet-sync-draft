@@ -161,7 +161,7 @@ In some cases, particularly if c-1 and c-2 both affect the same part of the data
 
 What if the actions of Device A and Device B in the previous scenario were even more concurrent?
 
-Let's alter the previous scenario slightly, and now suppose that the timing is such that Device B doesn't notice in time that Device A pushed Sequence 6 to the server. Device B tries pushing its local version (with Change c-2) as Sequence 6. The server rejects it because it will not accept Sequence 6 a second time. (Here we assume that the server is behaving correctly. We will see later that we have some provisions in case it is not.).
+Let's alter the previous scenario slightly, and now suppose that the timing is such that Device B doesn't notice in time that Device A pushed Sequence 6 to the server. Device B tries pushing its local version (with Change c-2) as Sequence 6. The server rejects it because it will not accept Sequence 6 a second time. (Here we assume that the server is behaving honestly. We will see later that we have some provisions in case it is not.).
 
 Device B takes this as an indication that it is not up to date. It downloads Sequence 6 from the server and proceeds with the merge as in the previous example.
 
@@ -216,9 +216,9 @@ Device B merges in its local changes (containing Change c-2) with Sequence 6 (co
     Device B->>Device B: MergeIn(Sequence 6, Baseline=Sequence 5)
 ```
 
-However this time, before Device B can push its merge of c-1 and Sequence 6 as Sequence 7, Device A creates a new wallet change, c-3, and pushes the updated wallet to the server as Sequence 7. Device B _again_ fails to push due to Device A getting there first. Device B again pulls from the server to get the new wallet created by Device A, Sequence 7.
+However this time, before Device B can push its merge as Sequence 7, Device A creates a new wallet change, c-3, and pushes the updated wallet to the server as Sequence 7. Device B _again_ fails to push due to Device A getting there first. Device B again pulls from the server to get the new wallet created by Device A, Sequence 7.
 
-At this point, the previous merge on Device B is **discarded**. Device B merges in its Change c-2 with Sequence 7 (containing c-1 and c-3 created by Device A). The common base of c-1, c-2 and c-3 is still Sequence 5, so *Sequence 5 will still be the merge baseline*.
+At this point, the previous merge on Device B is **discarded**. Device B merges its local changes (containing Change c-2) with Sequence 7 (containing c-1 and c-3 created by Device A). The common base of c-1, c-2 and c-3 is still Sequence 5, so *Sequence 5 will still be the merge baseline*.
 
 Finally, Device B is able to send back its merged wallet uninterrupted as Sequence 8.
 
@@ -240,7 +240,7 @@ Finally, Device B is able to send back its merged wallet uninterrupted as Sequen
     Server->>Device A: Get walletState Sequence 8
 ```
 
-The resulting version graph shows the simple relationship between versions (identified by "Sequence" numbers) and changes, despite the first failed attempt at a merge.
+The resulting version graph shows the simple relationship between versions and changes, despite the first failed attempt at a merge.
 
 ```mermaid
   flowchart LR
@@ -262,7 +262,7 @@ The resulting version graph shows the simple relationship between versions (iden
 
 If the failed merge of c-1 and c-2 required user interaction, that interaction would need to be repeated when merging c-1 c-2 and c-3. This is a trade off of user convenience for simplicity in design, but this is expected to be a rare case.
 
-NOTE: If this becomes a big usability problem, perhaps it would be possible to save some sort of intermediate state from the first merge attempt to avoid doing it the second time.
+NOTE: If this unexpectedly becomes a big usability problem, perhaps it would be possible to save some sort of intermediate state from the first merge attempt to avoid doing it the second time.
 
 # Dishonest Server - Altered Wallet
 
