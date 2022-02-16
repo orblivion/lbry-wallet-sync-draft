@@ -77,7 +77,7 @@ Each new version that gets pushed to the server has a new Sequence number that t
 
 # Basic Syncing, not every update seen by other device
 
-A slightly less basic scenario is one where a device creates and uploads two or more wallet changes before other devices download them. This may happen if the receiving devices are offline, if there are network issues, etc. As before, the sequence number increments for each upload. The device that downloads the update sees that the Sequence number has increaed by more than 1, but so long as it's a higher number it knows it's newer and there is no problem.
+A slightly less basic scenario is one where a device creates and uploads two or more wallet changes before other devices download them. This may happen if the receiving devices are offline, if there are network issues, etc. As before, the sequence number increments for each upload. The device that downloads the update sees that the Sequence number has increaed by more than 1, but so long as it's a higher number than the last one it downloaded, it knows it's newer and there is no problem.
 
 Note that at this point the first device has no way of knowing which other devices have received which of its updates.
 
@@ -111,11 +111,11 @@ Note that at this point the first device has no way of knowing which other devic
 
 # Merging - Basic
 
-Now we introduce merging. Device A and Device B _both_ make changes, as in an earlier example. However here they both make their changes at around the same time. Neither are aware of the others' change and they try pushing their wallets to the server as Sequence 6. Device A gets there first and succeeds. Device B is blocked because the server will not accept Sequence 6 a second time. (Here we assume that the server is behaving correctly, but we will see later that we have some provisions in case it is not).
+Now we introduce merging, and the scenario gets a little more complicated. Device A and Device B _both_ make changes c-1 and c-2 respectively, as in an earlier example. However here they both make their changes at around the same time. Device A pushes its change as Sequence 6, and Device B downloads it.
 
-Device B takes this as an indication that it is not up to date. It downloads Sequence 6 from the server. It then performs a **merge** between Sequence 6 (which includes Change c-1) and its own local state (which includes Change c-2). The **baseline** of this merge, i.e. the most recent common version between the two, is Sequence 5.
+At this point, Device B can't simply accept this new version or it would lose Change c-2. It performs a **merge** between Sequence 6 (which includes Change c-1) and its own local state (which includes Change c-2). The **baseline** of this merge, i.e. the most recent common version between the two, is Sequence 5.
 
-In some cases, if c-1 and c-2 deal with the same data, this merge will require interaction from the user in order to resolve it.
+In some cases, particularly if c-1 and c-2 both affect the same part of the data, this merge will require interaction from the user in order to resolve it.
 
 ```mermaid
   sequenceDiagram
@@ -129,8 +129,6 @@ In some cases, if c-1 and c-2 deal with the same data, this merge will require i
     Device B->>Device B: Create Change c-2
     Device A->>Server: Put walletState Sequence 6
     Note right of Server: Sequence 6
-    Device B-->>Server: Put walletState Sequence 6 (failed)
-    Note right of Server: (newWalletState.sequence != server.walletState.sequence + 1)
 
     Server->>Device B: Get walletState Sequence 6
     Device B->>Device B: MergeIn(Sequence 6, Baseline=Sequence 5)
@@ -157,6 +155,37 @@ In some cases, if c-1 and c-2 deal with the same data, this merge will require i
     m  --> s7
 
     style m fill:#9f9
+```
+
+# Merging - Timing, conflict on server
+
+What if the actions of Device A and Device B in the previous scenario were even more concurrent?
+
+Let's suppose that the timing is such that Device B doesn't notice in time that Device A pushed Sequence 6 to the server. Device B tries pushing its local version (with Change c-2) as Sequence 6. The server rejects it because it will not accept Sequence 6 a second time. (Here we assume that the server is behaving correctly. We will see later that we have some provisions in case it is not.).
+
+Device B takes this as an indication that it is not up to date. It downloads Sequence 6 from the server and proceeds with the merge as in the previous example.
+
+```mermaid
+  sequenceDiagram
+    participant Device A
+    participant Server
+    participant Device B
+
+    Note right of Server: Sequence 5
+
+    Device A->>Device A: Create Change c-1
+    Device B->>Device B: Create Change c-2
+    Device A->>Server: Put walletState Sequence 6
+    Note right of Server: Sequence 6
+    Device B-->>Server: Put walletState Sequence 6 (failed)
+    Note right of Server: (newWalletState.sequence != server.walletState.sequence + 1)
+
+    Server->>Device B: Get walletState Sequence 6
+    Device B->>Device B: MergeIn(Sequence 6, Baseline=Sequence 5)
+
+    Device B->>Server: Put walletState Sequence 7
+    Note right of Server: Sequence 7
+    Server->>Device A: Get walletState Sequence 7
 ```
 
 # Merging - Multiple Incoming
