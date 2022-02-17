@@ -1,8 +1,8 @@
 # Key
 
-This document describes the flow for users in as many interesting scenarios as we can reasonably consider. The diagrams will represent states, including what the screen will show, what buttons the user can push, etc. The arrows between the states will indicate what caused the state to change, along with caveats. Usually the user pushed a button, and a context surrounding it (success, invalid input, etc).
+This document describes the flow for users in as many interesting scenarios as we can reasonably consider. The diagrams will represent states, including what the screen will show, what buttons the user can push, etc. The arrows between the states will indicate what caused the state to change, along with caveats. Usually the user pushed a button, and some context surrounding it (success, invalid input, etc).
 
-Since these charts can get a little gnarly, we'll make it a little easier to follow by coloring the starting states **green** and the ending states **red**.
+Since these diagrams can get a little gnarly, we'll make it a little easier to follow by coloring the starting states **green** and the ending states **red**.
 
 ```mermaid
 flowchart TD
@@ -40,9 +40,16 @@ flowchart TD
 
 # Initial Setup
 
-<!-- I don't know why `direction RL` within the subgraphs makes it go top-down.
-     TD doesn't. Maybe it's a bug that they'll fix in which case we'll need to
-     change these to TD. -->
+The user starts the app logged out, but they still have a wallet and can interact with the app in most ways.
+
+If they decide to sign up, they enter their credentials. If they succeed, their wallet is uploaded and associated with their account, and they're logged in.
+
+They could fail because the email address already exists on the server. At this point they're invited to log in to their existing account if that address is theirs. Otherwise they're asked to try signing up with a different address.
+
+<!-- Mermaid note:
+     I don't know why `direction RL` within the subgraphs makes it go top-down.
+     TD doesn't make subgraphs go top-down. Maybe it's a bug that they'll fix
+     in which case we'll need to change these to TD. -->
 
 ```mermaid
 flowchart TD
@@ -63,12 +70,6 @@ flowchart TD
   SignupErrorEmailExists --<big><b>Sign up with a different email address</b></big>--> Signup
   SignupErrorEmailExists --<big><b>Log In Instead</b></big>--> Login
 
-  Signup --<big><b>Sign Up</b></big> - <i>Wallet PubKey Exists On Server with different Email</i>--> SignupErrorPubKeyExists
-  SignupErrorPubKeyExists --<big><b>Log In Instead</b></big>--> Login
-
-  Signup --<big><b>Sign Up</b></big> - <i>Wallet PubKey Email Pair Exists On Server</i>--> SignupErrorPubKeyEmailExists
-  SignupErrorPubKeyEmailExists --<big><b>Log In Instead</b></big>--> Login
-
   subgraph LoggedOutHomeScreen
     direction RL
     LoggedOutHomeScreen1[<h3>Trending Videos</h3>]
@@ -83,12 +84,6 @@ flowchart TD
   subgraph Login
     direction RL
     Login1[<h3>Log In</h3>...]
-  end
-
-  subgraph SignupErrorPubKeyEmailExists
-    direction RL
-    SignupErrorPubKeyEmailExists1[<h3>Error</h3>An account with your wallet and this email already exists]
-    SignupErrorPubKeyEmailExists2[<h3>Buttons</h3><ul><li>Log In Instead</li></ul>]
   end
 
   subgraph SignupErrorEmailExists
@@ -110,17 +105,17 @@ flowchart TD
     SignupErrorCredentials1[<h3>Error</h3><i>One of the following</i><ul><li> Server Invalid<li> Email Malformed<li> Password Not Good Enough</ul>]
     SignupErrorCredentials2[<h3>Buttons</h3><ul><li>Try Again</li></ul>]
   end
-
-
-  subgraph SignupErrorPubKeyExists
-    direction RL
-    SignupErrorPubKeyExists1[<h3>Error</h3>An account with your wallet, but not the email you entered, already exists]
-    SignupErrorPubKeyExists2[<h3>Note to user</h3>Change email later if you want, after you log in]
-    SignupErrorPubKeyExists3[<h3>Buttons</h3><ul><li>Log In Instead</li></ul>]
-  end
 ```
 
 # Account Recovery
+
+A user has no access to any devices that have a copy of their wallet, but they have a wallet on a lbry.id server. They install the app and log in.
+
+Just like with account signup, the user will have a wallet before they log in. Once they log in, they'll have two wallets: the one they had before logging in, and the one that just came from the server.
+
+If they made changes on the app before logging in, they will have logged in and logged out changes to merge at this point. This is a different sort of merge because there is no "baseline" version. (Effectively the baseline is an empty wallet file). We may also give the user the option to throw out their logged out changes.
+
+TODO - details about this merge
 
 ```mermaid
 flowchart TD
@@ -175,7 +170,7 @@ flowchart TD
 
 # Set Up Additional Device
 
-The only difference between this and Account Recovery is that there is another device connected somewhere. The one place this could change the flow is if that device pushes a change while this device is in the middle of MergeLoggedInLoggedOut.
+The only difference between Setting up an Additional Device and Account Recovery is the existence of another device connected somewhere. The one place that device could change the flow is if it pushes a change while this device is in the middle of `MergeLoggedInLoggedOut`.
 
 ```mermaid
 flowchart TD
@@ -221,9 +216,223 @@ flowchart TD
   end
 ```
 
-# Recover with existing wallet file
+# Unpushed encrypted local changes on startup
 
-TODO
+There is an edge case when starting the app. If _both_ of the following are true:
+
+* A password change is waiting on the server
+* There are local _unmerged_ changes on the device
+
+then the user will need to enter both their old and new passwords on startup. The old password will decrypt the local wallet, and the new password decrypt the wallet on the server.
+
+* Can we just push all changes before they quit? We can certainly try, but we can't guarantee it.
+* Can we just delete all changes before they quit? Figuring out a way to do this without them losing important data may be tough.
+
+It may be simpler to just find a way to account for the rare case that they have data on startup. And we can do our best to keep this as rare as possible by the above two methods.
+
+```mermaid
+flowchart TD
+  classDef start fill:#8f8;
+  classDef finish fill:#f88;
+
+  DeviceOff:::start
+  LoggedInHomeScreen:::finish
+
+  DeviceOff --<big><b>Start App</b></big> - Normal--> AppStartLogin
+  AppStartLogin --<big><b>Log In</b></big> <br> <i>No password change on server</i>-->LoggedInHomeScreen
+  AppStartLogin --<big><b>Log In</b></big> <br> <i>New Password <br> Password change exists on server. No local wallet changes</i>-->LoggedInHomeScreen
+
+  AppStartLogin --<big><b>Log In</b></big> <br> <i>New Password <br> Password change exists on server, local wallet changes exist</i>-->GetLocalPassword
+  AppStartLogin --<big><b>Log In</b></big> <br> <i>Old Password <br> Password change exists on server</i>-->GetServerPassword
+
+  GetLocalPassword --<big><b>Log In</b></big> - <i>Old Password</i>-->LoggedInHomeScreen
+  GetServerPassword --<big><b>Log In</b></big> - <i>New Password</i>-->LoggedInHomeScreen
+
+  subgraph DeviceOff
+    direction RL
+    DeviceOff1[<h3>Buttons</h3><ul><li>Start App</li></ul>]
+  end
+  subgraph AppStartLogin
+    direction RL
+    AppStartLogin1[<h3>Buttons</h3><ul><li>Log In</li></ul>]
+  end
+  subgraph LoggedInHomeScreen
+    direction RL
+    LoggedInHomeScreen1[...]
+  end
+  subgraph GetLocalPassword
+    direction RL
+    GetLocalPassword1[<h3>Prompt</h3>Looks like you have some changes that you haven't pushed.<br>Enter your old password to unlock your wallet so it can be pushed.]
+    GetLocalPassword2[<h3>Buttons</h3><ul><li>Log In</li></ul>]
+  end
+  subgraph GetServerPassword
+    direction RL
+    GetServerPassword1[<h3>Prompt</h3>Looks like you changed your password from another device.<br>Enter your new password.]
+    GetServerPassword2[<h3>Buttons</h3><ul><li>Log In</li></ul>]
+  end
+```
+
+# Turn On Application and Log In
+
+When we turn on the app, if the wallet is unencrypted and there's no online account associated, we go straight to the logged out home screen. If it's encrypted, we have to ask for a password. If there's also a LBRY.id account, that same password will be used for that as well.
+
+TODO - Perhaps it can be unencrypted but still have a LBRY.id account. Still sorting out that possibility. Maybe not advisable.
+
+```mermaid
+flowchart TD
+  classDef start fill:#8f8;
+  classDef finish fill:#f88;
+  classDef editorNote fill:#CCC;
+
+  DeviceOff:::start
+  LoggedOutHomeScreen:::finish
+  LoggedOutHomeScreen_:::start
+
+  DeviceOff --<big><b>Start App</b></big> <br> <i>Wallet Is Unencrypted</i> --> LoggedOutHomeScreen
+  DeviceOff --<big><b>Start App</b></big> <br> <i>Wallet Is Encrypted</i> --> AppStartLogin
+
+  AppStartLogin --<big><b>Log In</b></big> -->LoggedOutHomeScreen
+
+  LoggedOutHomeScreen --<big><b>Log In / Sign Up</b></big>--> Signup
+
+  subgraph Signup
+    direction RL
+    Signup1[...]
+  end
+
+  subgraph DeviceOff
+    direction RL
+    DeviceOff1[<h3>Buttons</h3><ul><li>Start App</li></ul>]
+  end
+
+  subgraph AppStartLogin
+    direction RL
+    AppStartLogin1[<h3>Buttons</h3><ul><li>Log In</li></ul>]
+  end
+
+  subgraph LoggedOutHomeScreen
+    subgraph LoggedOutHomeScreen_
+      direction RL
+      LoggedInHomeScreen1[...]
+    end
+  end
+```
+
+# Recover with Imported Wallet
+
+A user may have an existing wallet file which they wish to Import into the app. They might use our dialog, or they might try to be tricky and replace the file themselves. (For the latter case, we'll need some way to detect it. Probably that the key pair changed; maybe we keep a copy of the public key somewhere else.)
+
+The imported wallet may or may not be encrypted. If it's encrypted, the user will need to put in their password whether or not they want to create an account.
+
+At this point the app will not have associated the wallet with a lbry.id account, whether or not an account already exists.
+
+```mermaid
+flowchart TD
+  classDef start fill:#8f8;
+  classDef finish fill:#f88;
+  classDef editorNote fill:#CCC;
+
+  DeviceOff:::start
+  LoggedOutHomeScreen:::finish
+  LoggedOutHomeScreen_:::start
+  Signup:::finish
+
+  DeviceOff --<big><b>Start App</b></big> <br> <i>New Wallet Detected</i>--> NewWallet
+  LoggedOutHomeScreen --<big><b>Import Wallet</b></big>--> NewWallet
+
+  NewWallet -- <big><b>Keep Wallet Local</b></big> <br> <i>Wallet Is Encrypted</i> --> AppStartLogin
+  NewWallet -- <big><b>Keep Wallet Local</b></big> <br> <i>Wallet Is Unencrypted</i> --> LoggedOutHomeScreen
+  NewWallet -- <big><b>Create LBRY.id Account</b></big> --> Signup
+
+  AppStartLogin --<big><b>Log In</b></big> -->LoggedOutHomeScreen
+
+  LoggedOutHomeScreen --<big><b>Log In / Sign Up</b></big>--> Signup
+
+  subgraph NewWallet
+    direction RL
+    NewWallet1[<h3>Prompt</h3>Looks like you just added a wallet. Stay local or register for LBRY.id?]
+    NewWallet2[<h3>Buttons</h3><ul><li>Keep Wallet Local</li><li>Create LBRY.id Account</li></ul>]
+  end
+
+  subgraph Signup
+    direction RL
+    Signup1[...]
+  end
+
+  subgraph DeviceOff
+    direction RL
+    DeviceOff1[<h3>Buttons</h3><ul><li>Start App</li></ul>]
+  end
+
+  subgraph AppStartLogin
+    direction RL
+    AppStartLogin1[<h3>Buttons</h3><ul><li>Log In</li></ul>]
+  end
+
+  subgraph LoggedOutHomeScreen
+    subgraph LoggedOutHomeScreen_
+      direction RL
+      LoggedInHomeScreen1[...]
+    end
+  end
+
+```
+
+When the user Imports a Wallet, the signup/login process will have a couple of new error states in addition to `SignupErrorEmailExists` from above. It may be possible that the pubkey from the existing wallet file is already associated with a lbry.id account. If this is the case, and the user tries to create a new account, they will be invited to log in instead.
+
+```mermaid
+flowchart TD
+  classDef start fill:#8f8;
+  classDef finish fill:#f88;
+  Signup:::start
+  LoggedInHomeScreen:::finish
+  Login:::finish
+
+  Signup --<big><b>Sign Up</b></big> - <i>Success</i>--> LoggedInHomeScreen
+  Signup --<big><b>I already have an account</b></big>--> Login
+
+  Signup --<big><b>Sign Up</b></big> - <i>Wallet PubKey Exists On Server with different Email</i>--> SignupErrorPubKeyExists
+  SignupErrorPubKeyExists --<big><b>Log In Instead</b></big>--> Login
+
+  Signup --<big><b>Sign Up</b></big> - <i>Wallet PubKey Email Pair Exists On Server</i>--> SignupErrorPubKeyEmailExists
+  SignupErrorPubKeyEmailExists --<big><b>Log In Instead</b></big>--> Login
+
+  subgraph LoggedInHomeScreen
+    direction RL
+    LoggedInHomeScreen1[<h3>Logged In Home Screen</h3>...]
+  end
+
+  subgraph Login
+    direction RL
+    Login1[<h3>Log In</h3>...]
+  end
+
+  subgraph SignupErrorPubKeyEmailExists
+    direction RL
+    SignupErrorPubKeyEmailExists1[<h3>Error</h3>An account with your wallet and this email already exists]
+    SignupErrorPubKeyEmailExists2[<h3>Buttons</h3><ul><li>Log In Instead</li></ul>]
+  end
+
+  subgraph Signup
+    direction RL
+    Signup1[<h3>Enter Credentials</h3><ul><li>Server URL</li><li>Email</li><li>Password</li></ul>]
+    Signup2[<h3>Buttons</h3><ul><li>Sign Up</li></ul>]
+    Signup2[<h3>Buttons</h3><ul><li>Sign Up</li><li>I already have an account</li></ul>]
+  end
+
+  subgraph SignupErrorPubKeyExists
+    direction RL
+    SignupErrorPubKeyExists1[<h3>Error</h3>An account with your wallet, but not the email you entered, already exists]
+    SignupErrorPubKeyExists2[<h3>Note to user</h3>You can change your email address later if you want, after you log in]
+    SignupErrorPubKeyExists3[<h3>Buttons</h3><ul><li>Log In Instead</li></ul>]
+  end
+```
+
+If the imported wallet already has a LBRY.id account associated with it, it is possible that it has diverged from the version on the server. Since either might have changed, merging may be in order.
+
+Usually when we make changes to wallets, we have a baseline for the purpose of merging. Imported wallets will not have this, so the user might have a more annoying merge to deal with. It'd be the same type of merge as `MergeLoggedInLoggedOut` above (and happen in the same part of the login flow).
+
+NOTE: Perhaps we could somehow add baseline (and other metadata) to wallet import/export so that we could do a normal merge here.
 
 <!--
 
@@ -639,77 +848,52 @@ flowchart TD
   end
 ```
 
-# Turn On Application and Log In
-
-There is an edge case when starting the app. If _both_ of the following are true:
-
-* A password change is waiting on the server
-* There are local _unmerged_ changes on the device
-
-then the user will need to enter both their old and new passwords on startup. The old password will decrypt the local wallet, and the new password decrypt the wallet on the server.
-
-* Can we just push all changes before they quit? We can certainly try, but we can't guarantee it.
-* Can we just delete all changes before they quit? Figuring out a way to do this without them losing important data may be tough.
-
-It may be simpler to just find a way to account for the rare case that they have data on startup. And we can do our best to keep this as rare as possible by the above two methods.
-
-```mermaid
-flowchart TD
-  classDef start fill:#8f8;
-  classDef finish fill:#f88;
-
-  DeviceOff:::start
-  LoggedInHomeScreen:::finish
-
-  DeviceOff --<big><b>Start App</b></big> - Normal--> AppStartLogin
-  AppStartLogin --<big><b>Log In</b></big> <br> <i>No password change on server</i>-->LoggedInHomeScreen
-  AppStartLogin --<big><b>Log In</b></big> <br> <i>New Password <br> Password change exists on server. No local wallet changes</i>-->LoggedInHomeScreen
-
-  AppStartLogin --<big><b>Log In</b></big> <br> <i>New Password <br> Password change exists on server, local wallet changes exist</i>-->GetLocalPassword
-  AppStartLogin --<big><b>Log In</b></big> <br> <i>Old Password <br> Password change exists on server</i>-->GetServerPassword
-
-  GetLocalPassword --<big><b>Log In</b></big> - <i>Old Password</i>-->LoggedInHomeScreen
-  GetServerPassword --<big><b>Log In</b></big> - <i>New Password</i>-->LoggedInHomeScreen
-
-  subgraph DeviceOff
-    direction RL
-    DeviceOff1[<h3>Buttons</h3><ul><li>Start App</li></ul>]
-  end
-  subgraph AppStartLogin
-    direction RL
-    AppStartLogin1[<h3>Buttons</h3><ul><li>Log In</li></ul>]
-  end
-  subgraph LoggedInHomeScreen
-    direction RL
-    LoggedInHomeScreen1[...]
-  end
-  subgraph GetLocalPassword
-    direction RL
-    GetLocalPassword1[<h3>Prompt</h3>Looks like you have some changes that you haven't pushed.<br>Enter your old password to unlock your wallet so it can be pushed.]
-    GetLocalPassword2[<h3>Buttons</h3><ul><li>Log In</li></ul>]
-  end
-  subgraph GetServerPassword
-    direction RL
-    GetServerPassword1[<h3>Prompt</h3>Looks like you changed your password from another device.<br>Enter your new password.]
-    GetServerPassword2[<h3>Buttons</h3><ul><li>Log In</li></ul>]
-  end
-```
-
 # Change Server
 
+Changing servers involves changing the lbry.id domain on each of the user's devices, continuing the syncing process on the new server, and making sure that any wallet changes remain intact over the process.
+
+The ideal scenario is the following: The user gathers _all_ of their devices. They make sure that all local changes are pushed and all remote changes are downloaded. At this point, every device should be on the same state, and this can be confirmed by comparing visual hashes on the devices. The user then switches every device one by one to the new server. At this point, the user can start making changes to wallets as before.
+
+Supposing the user deviates a little from this. They get to the point where every device has the same visual hash. The user moves one device to the new server, but they also make a change to the wallet on that server before moving other devices. Because of sequence numbers, this will be fine: After the second device is moved to the new server, it will see the first device's pushed changes and pull them before pushing any of its own new changes.
+
+## Problems and partial solution
+
+Supposing the user deviates a little more. Instead of following the guidelines, they make multiple changes on two different devices on two different servers. Then, they finish moving all of their devices to the new server. At this point, changes created by one of the devices will likely get lost. However, if we use the device-sequence map (see `lastSyncedById` in the [sync](sync.md) document), we can at least detect this state and alert the user to there being a problem (the `DataError` state), which leads to an error recovery mode (an ugly conflict resolution). This would be similar to the "dishonest server" I describe in the sync document.
+
+Another problem would be if the user has a device that they forgot about that they keep connected to the old server. Or similarly they add a new device to the old server by accident. This is ultimately the responsibility of the user, and we can yell at them to make sure they don't do this.
+
+Another possibility to note: there might be an existing account on the new server. Perhaps the user created it a while ago. If it's old, it means that the sequence number will be low, so it will _usually_ be overwritten. However, it's also possible that not all data got merged when the user left that account previously. Again, if we have the device-sequence map, we can detect this and enter the `DataError` state.
+
+## Potential further solution
+
+We're left with user error that could lead to `DataError`, or devices left on the old server, and maybe that's okay. But we could consider an option that could mitigate or perhaps prevent this.
+
+We could make the server change process similar to the password change process: we could push a walletState to the _old_ server with a special directive (in encrypted metadata) that informs other devices of the intention to switch to the new server. Clients still on the old server would be forced to receive this message before pushing any local changes, and would thus push them to the new server. This would mitigate the `DataError`.
+
+It may also be simpler for the user, because they would only need to initiate the server change on one device. However, we may want to continue making the user responsible for confirming that every device has changed to the new server. The old server might be malicious and hide this directive from some devices. Also, the old server might disappear altogether, so we should keep open the option of having the user manually do the task. Also, maybe for security reasons they should get a popup. "IF YOU DID NOT INITIATE THIS CHANGE YOU MAY BE UNDER ATTACK" or whatever.
+
+## TODO
+
+Prevent changing password while changing server, oof. At very least just tell them not to do it. But we could probably just add "server change" to the preemption hierarchy above.
+
+Again, it's not that I want to complicate things with this possibliity. It's that we don't have totalitarian control over the user's devices, and we want to prevent them from shooting themselves in the foot (data loss) if we can, even if it's a rare case.
+
 ```mermaid
 flowchart TD
   classDef start fill:#8f8;
   classDef finish fill:#f88;
 
+  DataError:::finish
   LoggedInHomeScreen:::finish
   LoggedInHomeScreen_:::start
 
   LoggedInHomeScreen --<big><b>Change Server</b></big>--> ChangeServer
-  ChangeServer  --<big><b>Confirm</b></big> - Bad Server--> BadServer
-  ChangeServer  --<big><b>Confirm</b></big> - Success--> ChangeServerConfirmation
+  ChangeServer --<big><b>Confirm</b></big> - <i>Bad Server</i>--> BadServer
+  ChangeServer --<big><b>Confirm</b></big> - <i>Success</i>--> LoggedInHomeScreen
+  ChangeServer --<big><b>Confirm</b></big><br><i>Old account exists on new server</i><br><i>and is not fully merged</i><br><i>into current wallet</i>--> DataError
+  ChangeServer --<big><b>Confirm</b></big><br><i>Device pushed changes to old</i><br><i>server after another</i><br><i>device pushed changes to new server</i>--> DataError
+
   BadServer --<big><b>Try Again</b></big>--> ChangeServer
-  ChangeServerConfirmation --<big><b>Confirm</b></big>--> LoggedInHomeScreen
 
   subgraph LoggedInHomeScreen
     subgraph LoggedInHomeScreen_
@@ -721,20 +905,19 @@ flowchart TD
 
   subgraph ChangeServer
     direction RL
-    ChangeServer1[<h3>Prompt</h3>We don't trust the server you were at.<br>Gather all of your devices and confirm visual hash to make sure they're all synced first<br>- visual hash -]
+    ChangeServer1[<h3>Prompt</h3>Gather all of your devices and confirm visual hash to make sure they're all synced first<br>- visual hash -]
     ChangeServer2[<h3>Enter Credentials</h3><ul><li>New Server URL</li></ul>]
     ChangeServer3[<h3>Buttons</h3><ul> <li>Confirm</li> </ul>]
   end
 
-  subgraph ChangeServerConfirmation
+  subgraph DataError
     direction RL
-    ChangeServerConfirmation1[<h3>Prompt</h3>Confirm new visual hashes to confirm new server<br>- visual hash -]
-    ChangeServerConfirmation2[<h3>Buttons</h3><ul> <li>Confirm</li> </ul>]
+    DataError1[<h3>Data Error</h3>...]
   end
 
   subgraph BadServer
     direction RL
-    BadServer1[<h3>Prompt</h3>Server Invalid]
+    BadServer1[<h3>Prompt</h3>Server Invalid. Bad domain, server not found there, etc.]
     BadServer2[<h3>Buttons</h3><ul> <li>Try Again</li> </ul>]
   end
 ```
