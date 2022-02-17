@@ -1,8 +1,8 @@
 # Key
 
-This document describes the flow for users in as many interesting scenarios as we can reasonably consider. States will how what the screen will show, what buttons the user can push, etc. The arrows will indicate what caused the state to change, along with caveats. Usually the user pushed a button, and a context surrounding it (success, invalid input, etc).
+This document describes the flow for users in as many interesting scenarios as we can reasonably consider. The diagrams will represent states, including what the screen will show, what buttons the user can push, etc. The arrows between the states will indicate what caused the state to change, along with caveats. Usually the user pushed a button, and a context surrounding it (success, invalid input, etc).
 
-Since these charts can get a little gnarly, we'll make it a little easier to follow by coloring the starting states <font color="green">**green**</font> and the ending states <font color="red">**red**</font>.
+Since these charts can get a little gnarly, we'll make it a little easier to follow by coloring the starting states **green** and the ending states **red**.
 
 ```mermaid
 flowchart TD
@@ -17,7 +17,7 @@ flowchart TD
   Next --<big><b>Push another button</b></big> <i>Success</i>--> Complete
 ```
 
-Sometimes a starting state will also be the ending state for a given scenario. For instance, a user starts on a home screen, performs an action, and is back on the home screen doing what they were doing before. In this case, we color the state both <font color="green">**green**</font> and <font color="red">**red**</font>.
+Sometimes a starting state will also be the ending state for a given scenario. For instance, a user starts on a home screen, performs an action, and is back on the home screen doing what they were doing before. In this case, we color the state both **green** and **red**.
 
 ```mermaid
 flowchart TD
