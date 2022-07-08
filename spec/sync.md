@@ -310,11 +310,11 @@ What if the server were dishonest - presenting older versions of the walletState
     Note right of Device B: Error Recovery Mode
 ```
 
-# Dishonest Server - Merging Divergent Histories
+# Dishonest Server - Allowing overwrites
 
-Let's say the dishonest (or maybe buggy) server is split into states: ServerX and ServerY, with the goal of trying to trick the devices into an inconsistent sync state. This would be a situation where the sequence numbers are the same, the data may be similar, but it's not exactly the same.
+Let's say the dishonest (or maybe buggy) server stops properly blocking wallet updates in case of conflict. Specifically, if two different clients push to the same sequence one after the other, it will overwrite the former with the latter, whereas an honest server would block the second one to let it know to pull and merge first.
 
-The servers will start the with the same state, and both devices are up to date. The current walletState has a sequence of 5 and was pushed by Device B. (sequence 4 was previously pushed by Device A).
+In this example, the servers will start the with the same state, and both devices are up to date. The current walletState has a sequence of 5 and was pushed by Device B. Sequence 4 was previously pushed by Device A. This is reflected in `lastSynced`.
 
 ```mermaid
   sequenceDiagram
@@ -329,130 +329,58 @@ The servers will start the with the same state, and both devices are up to date.
     Note right of Device B: deviceB.mergeBaseWalletState=server.walletState
 ```
 
-Next, both devices make local changes and push their walletState with Sequence 6. An honest server would reject at least one of them. In this case, the server dishonestly creates an alternate timeline for each, as ServerX and ServerY. For convenience, we will refer to these sequences as Sequence 6.A and Sequence 6.B, but of course the sequence value for both will simply be 6:
+Next, both devices make local changes and push their walletState with Sequence 6. Device A pushes before Device B. An honest server would reject Device B. In this case, the server dishonestly allows it to overwrite Sequence 6 from Device A. For convenience, we will refer to these different Sequence 6 versions as Sequence 6.A and Sequence 6.B, but of course the sequence value for both will simply be 6:
 
 ```mermaid
   sequenceDiagram
     participant Device A
-    participant ServerX
-    participant ServerY
+    participant Server
     participant Device B
 
     Device A->>Device A: Create Change c-1
-    Device A->>ServerX: Put walletState Sequence 6.A
-
-    Note right of ServerX: serverX.walletState.sequence=6.A
-    Note right of ServerX: serverX.walletState.lastSynced[deviceB.id].sequence=5
-
     Device B->>Device B: Create Change c-2
-    Device B->>ServerY: Put walletState Sequence 6.B
-    Note left of ServerY: serverY.walletState.sequence=6.B
-    Note left of ServerY: serverY.walletState.lastSynced[deviceB.id].sequence=6.B
+    Device A->>Server: Put walletState Sequence 6.A
 
+    Note right of Server: server.walletState.sequence=6.A
+    Note right of Server: server.walletState.lastSynced[deviceA.id].sequence=6.A
+    Note right of Server: server.walletState.lastSynced[deviceB.id].sequence=5
+    Note left of Device A: deviceA.walletState.sequence=6.A
+
+    Device B->>Server: Put walletState Sequence 6.B
+    Note right of Server: server.walletState.sequence=6.B
+    Note right of Server: server.walletState.lastSynced[deviceA.id].sequence=4
+    Note right of Server: server.walletState.lastSynced[deviceB.id].sequence=6.B
     Note right of Device B: deviceB.walletState.sequence=6.B
-    Note left of Device A: deviceB.walletState.lastSynced[deviceB.id].sequence=5
 ```
 
-Now the server attempts to cause trouble by connecting Device B to ServerX. Device B pulls, and sees Sequence 6.A:
+Note that `lastSynced` gets overwritten as well. `lastSynced[deviceA.id]` gets degraded from `6.A` back to `4`.
+
+Finally, Device B, being on Sequence 6.B, makes one more change and pushes it to the server as Sequence 7. Device A then pulls it from the server. Since Device A was on Sequence 6.A, Sequence 7 is what it expects:
 
 ```mermaid
   sequenceDiagram
     participant Device A
-    participant ServerX
-    participant ServerY
+    participant Server
     participant Device B
 
+    Device B->>Device B: Create Change c-3
+    Device B->>Server: Put walletState Sequence 7
+    Note right of Server: server.walletState.sequence=7
+    Note right of Server: server.walletState.lastSynced[deviceA.id].sequence=4
+    Note right of Server: server.walletState.lastSynced[deviceB.id].sequence=7
 
-    ServerX->>Device B: Get walletState Sequence 6.A
-    Device B-->>Device B: MergeIn(serverX.walletState, deviceB.mergeBaseWalletState) (fail)
-    Note right of Device B: (serverX.walletState.sequence == deviceB.walletState.sequence &&...
-    Note right of Device B: ... serverX.walletState != deviceB.walletState)
-    Note right of Device B: Error Recovery Mode
+    Server->>Device A: Get walletState Sequence 7
+
+    Device A-->>Device A: MergeIn(server.walletState, deviceA.mergeBaseWalletState) (fail)
+    Note right of Device A: (server.walletState.lastSynced[deviceA.id].sequence != deviceA.walletState.sequence)
+    Note right of Device A: Error Recovery Mode
 ```
 
-Device B can see that the walletState's sequence number didn't change, and yet the walletState is different. This is a straightforward indication that things are not going as expected, so it enters Error Recovery Mode.
+Device A doesn't see anything wrong by looking merely at the sequence number of the walletState it just pulled. But if it had accepted Sequence 7 here, it would lose Change c-1 (which only exists in Sequence 6.A) since it was clobbered by Sequence 6.B. However it can see from the `lastSynced` on the new walletState that something is indeed wrong. `lastSynced[deviceA.id]` should be 6 (referring to 6.A), which matches Device A's own record of the last sequence it pushed. But because of the clobber, `lastSynced[deviceA.id]` reverted to 4.
 
-But what if the dishonest server was a little smarter. Instead of giving Device B access to Sequence 6.A, it waits until Device A makes one more change and pushes Sequence 7. Again, Device A doesn't know about Sequence 6.B, so it still believes that Device B's merge base is 5:
+The overwrite is thus stopped, and c-1 is preserved (locally on Device A, at least), and Device A goes into Error Recovery Mode.
 
-```mermaid
-  sequenceDiagram
-    participant Device A
-    participant ServerX
-    participant ServerY
-    participant Device B
-
-    Device A->>Device A: Create Change c-3
-    Device A->>ServerX: Put walletState Sequence 7
-    Note left of ServerX: serverX.walletState.sequence=7
-    Note left of ServerX: serverX.walletState.lastSynced[deviceB.id].sequence=5
-```
-
-Now once again the server attempts to cause trouble by connecting Device B to ServerX, attempting to trick Device B into accepting Sequence 7:
-
-```mermaid
-  sequenceDiagram
-    participant Device A
-    participant ServerX
-    participant ServerY
-    participant Device B
-
-
-    ServerX->>Device B: Get walletState Sequence 7
-    Device B-->>Device B: MergeIn(serverX.walletState, deviceB.mergeBaseWalletState) (fail)
-    Note right of Device B: (serverX.walletState.lastSynced[deviceB.id].sequence != deviceB.walletState.sequence)
-    Note right of Device B: Error Recovery Mode
-```
-
-Because Device B last pushed Sequence 6.B, it doesn't see anything wrong by looking merely at the sequence number. What would happen if it accepted it?
-
-With an honest server, if Device B successfully pushed Sequence 6.B, Sequence 7 would include Changes c-1, c-2, and c-3. Because of our tricky server diverging the histories, it does not include Change c-2.
-
-Logically speaking, Sequence 5 is the proper merge base between Sequence 7 and Sequence 6.B:
-
-```mermaid
-  flowchart LR
-    s5[Sequence 5]
-    s6a[Sequence 6.A]
-    s6b[Sequence 6.B]
-    s7a[Sequence 7]
-    c1([Change c-1])
-    c2([Change c-2])
-    c3([Change c-3])
-    m{Merge}
-
-    s5 --> c1 --> s6a --> c3 --> s7a --> m
-    s5 --> c2 --> s6b --> m
-
-    style m fill:#9f9
-```
-
-However, Device B considers Sequence 6B to be the merge base. This means that if Device B were to accept Sequence 7, it would effectively _revert_ Change c-2:
-
-```mermaid
-  flowchart LR
-    s5[Sequence 5]
-    s5_[Sequence 5]
-    s6a[Sequence 6.A]
-    s6b[Sequence 6.B]
-    s7a[Sequence 7]
-    c1([Change c-1])
-    c2([Change c-2])
-    rc2([Revert Change c-2])
-    c3([Change c-3])
-    m{Merge - fail!}
-
-    s6b --> rc2 --> s5_ --> c1 --> s6a --> c3 --> s7a --> m
-    s5 --> c2 --> s6b --> m
-
-    style m fill:#f99
-    style rc2 fill:#f99
-```
-
-Device B prevents this by looking at `lastSynced`. Device B sees that `serverX.walletState.lastSynced[deviceB.id]` is still 5, while `deviceB.walletState.sequence` is 6. This tells Device B that Sequence 7 does not include Sequence 6.B (and thus Change c-2). It means that somehow or other, the server and clients got into an inconsistent state. To prevent further trouble, Device B goes into Error Recovery Mode.
-
-The server cannot forge `lastSynced`. A device could forge it, but again, in our model we necessarily assume that the devices are trusted.
-
-NOTE: An advancement we could make would be to store more historical versions. In this case, if Device B happened to have Sequence 5 lying around, it could recover. But, the user may need to manually merge the changes between 5 and 6.B twice. Also, this might lead to servers being less disciplined. And it adds complication. But, it's an option for consideration.
+The server cannot forge `lastSynced` because it's covered by the signature. A device could forge it, but again, in our model we necessarily assume that the devices are trusted (though they could be buggy).
 
 # Network issues
 
