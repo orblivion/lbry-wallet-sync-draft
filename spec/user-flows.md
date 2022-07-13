@@ -540,9 +540,9 @@ This requires no user interaction.
 
 This involves user interaction (entering a new local password).
 
-* Can't happen while there are **local wallet changes** pending: It's forbidden as a rule just to keep our system simpler.
+* Can't happen while there are **local wallet changes** pending: It's forbidden as a rule just to keep our system simpler (which we'll see in a second).
 
-* Can't happen while there are **remote wallet changes** pending: We don't want to overwrite remote wallet changes without merging them in. However, because of our rule against local changes, we can guarantee that the merge will require no user interaction. We can pull and apply those changes silently if they come while the user is entering a new password.
+* Can't happen while there are **remote wallet changes** pending: We don't want to overwrite remote wallet changes without merging them in. However, because of our rule against local changes, we can guarantee that the merge will require no user interaction (otherwise we might have a merge in the middle of a password change!). We can pull and apply those changes silently if they come while the user is entering a new password.
 
 * Can't happen if there is a **remote password change** pending: If the remote password changed, there might also be new remote wallet changes that we can't see without decrypting it, so we need to enter the remote new password. If the remote password changes *while* the user is creating a local password change, we will *discard* the local new password and instead adopt the remote new password. This is just to simplify the UI (for both user and developers).
 
